@@ -1,0 +1,53 @@
+{
+  "name": "digitaldefiance-node-express-suite-mongo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/digitaldefiance-node-express-suite-mongo/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": [
+    "digitaldefiance-node-express-suite",
+    "digitaldefiance-i18n-lib",
+    "digitaldefiance-ecies-lib",
+    "digitaldefiance-node-ecies-lib",
+    "digitaldefiance-suite-core-lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/packages/digitaldefiance-node-express-suite-mongo"
+      ],
+      "options": {
+        "outputPath": "dist/packages/digitaldefiance-node-express-suite-mongo",
+        "tsConfig": "packages/digitaldefiance-node-express-suite-mongo/tsconfig.lib.json",
+        "packageJson": "packages/digitaldefiance-node-express-suite-mongo/package.json",
+        "main": "packages/digitaldefiance-node-express-suite-mongo/src/index.ts",
+        "assets": [
+          {
+            "input": "packages/digitaldefiance-node-express-suite-mongo",
+            "glob": "README.md",
+            "output": "."
+          }
+        ],
+        "maxWorkers": 1
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/packages/digitaldefiance-node-express-suite-mongo"
+      ],
+      "options": {
+        "jestConfig": "packages/digitaldefiance-node-express-suite-mongo/jest.config.js"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/digitaldefiance-node-express-suite-mongo/src/**/*.ts"
+        ]
+      }
+    }
+  }
+}

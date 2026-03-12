@@ -1,0 +1,53 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/packages/digitaldefiance-node-express-suite-mongo",
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "emitDeclarationOnly": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "incremental": true,
+    "tsBuildInfoFile": "../../dist/out-tsc/packages/digitaldefiance-node-express-suite-mongo/.tsbuildinfo"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "tests/**/*"
+  ],
+  "references": [
+    {
+      "path": "../digitaldefiance-node-express-suite"
+    },
+    {
+      "path": "../digitaldefiance-i18n-lib"
+    },
+    {
+      "path": "../digitaldefiance-ecies-lib"
+    },
+    {
+      "path": "../digitaldefiance-node-ecies-lib"
+    },
+    {
+      "path": "../digitaldefiance-suite-core-lib"
+    }
+  ]
+}

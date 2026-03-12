@@ -1,0 +1,50 @@
+{
+  "name": "@digitaldefiance/node-express-suite-mongo",
+  "version": "4.23.0",
+  "description": "MongoDB/Mongoose extensions for @digitaldefiance/node-express-suite",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./testing": {
+      "types": "./src/testing.d.ts",
+      "default": "./src/testing.js"
+    }
+  },
+  "dependencies": {
+    "@digitaldefiance/mongoose-types": "8.20.9",
+    "mongodb": "^6.20.0",
+    "mongoose": "^8.18.2"
+  },
+  "peerDependencies": {
+    "@digitaldefiance/branded-interface": "^0.0.5",
+    "@digitaldefiance/ecies-lib": "^4.20.0",
+    "@digitaldefiance/i18n-lib": "^4.6.0",
+    "@digitaldefiance/node-ecies-lib": "^4.20.0",
+    "@digitaldefiance/node-express-suite": "^4.23.0",
+    "@digitaldefiance/suite-core-lib": "^4.22.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.1.4"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "express",
+    "mongodb",
+    "mongoose",
+    "typescript"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "packageManager": "yarn@4.12.0",
+  "scripts": {
+    "build": "npx nx build digitaldefiance-node-express-suite-mongo",
+    "test": "npx nx test digitaldefiance-node-express-suite-mongo"
+  }
+}

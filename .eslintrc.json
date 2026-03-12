@@ -1,0 +1,86 @@
+{
+  "root": true,
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "**/*.d.ts"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint",
+    "prettier"
+  ],
+  "parserOptions": {
+    "project": "packages/digitaldefiance-node-express-suite-mongo/tsconfig.eslint.json"
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "rules": {
+    "prettier/prettier": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unsafe-assignment": "error",
+    "@typescript-eslint/no-unsafe-call": "error",
+    "@typescript-eslint/no-unsafe-member-access": "error",
+    "@typescript-eslint/no-unsafe-return": "error",
+    "@typescript-eslint/no-unsafe-argument": "error"
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/__tests__/**/*.ts",
+        "**/__mocks__/**/*.ts",
+        "**/*.spec.ts",
+        "**/*.test.ts",
+        "tests/**/*.ts",
+        "**/tests/**/*.ts",
+        "src/__tests__/**/*.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/no-require-imports": "off"
+      }
+    },
+    {
+      "files": [
+        "src/decorators/**/*.ts",
+        "src/container/**/*.ts",
+        "src/controllers/**/*.ts",
+        "src/utils/**/*.ts",
+        "src/interfaces/**/*.ts",
+        "src/models/**/*.ts",
+        "src/schemas/**/*.ts",
+        "src/routers/**/*.ts",
+        "src/services/**/*.ts",
+        "src/plugins/**/*.ts",
+        "src/transactions/**/*.ts",
+        "src/model-registry.ts",
+        "src/mongo-application-concrete.ts",
+        "src/types/**/*.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unsafe-argument": "off"
+      }
+    }
+  ]
+}
