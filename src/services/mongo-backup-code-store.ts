@@ -122,7 +122,7 @@ export class MongoBackupCodeStore<
     if (!doc) {
       throw new Error(`User not found: ${userId}`);
     }
-    return await this.roleService.getMemberType(doc, this.session);
+    return await this.roleService.getMemberType(doc._id, this.session);
   }
 
   public async fetchBatch(

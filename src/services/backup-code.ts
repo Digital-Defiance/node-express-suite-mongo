@@ -429,7 +429,7 @@ export class BackupCodeService<
           );
 
           const memberType: MemberType = await this.roleService.getMemberType(
-            userDoc,
+            userDoc._id,
             session,
           );
           const user = new BackendMember(

@@ -1,10 +1,11 @@
 /**
- * @fileoverview Server initialization result interface.
- * Defines structure for test server initialization with admin, member, and system users.
+ * @fileoverview Mongo-specific server initialization result interface.
+ * Extends the base IServerInitResult with Mongoose document types.
  * @module interfaces/server-init-result
  */
 
-import { Member, PlatformID } from '@digitaldefiance/node-ecies-lib';
+import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { IServerInitResult as IBaseServerInitResult } from '@digitaldefiance/node-express-suite';
 import { RoleDocument } from '../documents/role';
 import { UserDocument } from '../documents/user';
 import { UserRoleDocument } from '../documents/user-role';
@@ -13,36 +14,21 @@ import { UserRoleDocument } from '../documents/user-role';
 export type { RoleDocument, UserDocument, UserRoleDocument };
 
 /**
- * Result of server initialization for testing.
- * Contains admin, member, and system user accounts with credentials and roles.
+ * Mongo-specific result of server initialization.
+ * Extends the base interface with Mongoose document references for
+ * roles, users, and user-role associations.
  * @template TID - Platform ID type (defaults to Buffer)
  */
-export interface IServerInitResult<TID extends PlatformID = Buffer> {
+export interface IServerInitResult<
+  TID extends PlatformID = Buffer,
+> extends IBaseServerInitResult<TID> {
   adminRole: RoleDocument<TID>;
   adminUser: UserDocument<string, TID>;
-  adminUsername: string;
-  adminEmail: string;
-  adminMnemonic: string;
-  adminPassword: string;
-  adminBackupCodes: Array<string>;
-  adminMember: Member<TID>;
   adminUserRole: UserRoleDocument<TID>;
   memberRole: RoleDocument<TID>;
   memberUser: UserDocument<string, TID>;
-  memberUsername: string;
-  memberEmail: string;
-  memberMnemonic: string;
-  memberPassword: string;
-  memberBackupCodes: Array<string>;
-  memberMember: Member<TID>;
   memberUserRole: UserRoleDocument<TID>;
   systemRole: RoleDocument<TID>;
   systemUser: UserDocument<string, TID>;
-  systemUsername: string;
-  systemEmail: string;
-  systemMnemonic: string;
-  systemPassword: string;
-  systemBackupCodes: Array<string>;
-  systemMember: Member<TID>;
   systemUserRole: UserRoleDocument<TID>;
 }

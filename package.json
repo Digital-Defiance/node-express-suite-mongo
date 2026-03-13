@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-express-suite-mongo",
-  "version": "4.23.0",
+  "version": "4.23.1",
   "description": "MongoDB/Mongoose extensions for @digitaldefiance/node-express-suite",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -24,7 +24,7 @@
     "@digitaldefiance/ecies-lib": "^4.20.0",
     "@digitaldefiance/i18n-lib": "^4.6.0",
     "@digitaldefiance/node-ecies-lib": "^4.20.0",
-    "@digitaldefiance/node-express-suite": "^4.23.0",
+    "@digitaldefiance/node-express-suite": "^4.23.1",
     "@digitaldefiance/suite-core-lib": "^4.22.0"
   },
   "devDependencies": {
@@ -45,6 +45,8 @@
   "packageManager": "yarn@4.12.0",
   "scripts": {
     "build": "npx nx build digitaldefiance-node-express-suite-mongo",
-    "test": "npx nx test digitaldefiance-node-express-suite-mongo"
+    "test": "npx nx test digitaldefiance-node-express-suite-mongo",
+    "lint": "npx nx lint digitaldefiance-node-express-suite-mongo",
+    "lint:fix": "npx nx lint digitaldefiance-node-express-suite-mongo --fix"
   }
 }

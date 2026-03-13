@@ -19,14 +19,13 @@ import {
   LastAdminError,
   Role,
 } from '@digitaldefiance/suite-core-lib';
-import { UserDocument } from '../documents';
 import { RoleDocument } from '../documents/role';
 import { UserRoleDocument } from '../documents/user-role';
 import { BaseModelName } from '../enumerations/base-model-name';
 import type { IApplication } from '@digitaldefiance/node-express-suite';
 import type { IRoleBackendObject } from '@digitaldefiance/node-express-suite';
 import { ModelRegistry } from '../model-registry';
-import { omit, BaseService } from '@digitaldefiance/node-express-suite';
+import { omit, AbstractRoleService } from '@digitaldefiance/node-express-suite';
 import {
   getEnhancedNodeIdProvider,
   type PlatformID,
@@ -44,7 +43,7 @@ export class RoleService<
   TID extends PlatformID = Buffer,
   TDate extends Date = Date,
   TTokenRole extends ITokenRole<TID, TDate> = ITokenRole<TID, TDate>,
-> extends BaseService<TID> {
+> extends AbstractRoleService<TID, TDate, TTokenRole, RoleDocument<TID>> {
   /**
    * Constructor for the role service
    * @param application The application object
@@ -348,12 +347,11 @@ export class RoleService<
   }
 
   public async isUserAdmin(
-    userDoc: UserDocument<string, TID>,
+    userId: TID,
     session?: ClientSession,
     providedRoles?: Array<RoleDocument<TID>>,
   ): Promise<boolean> {
-    const roles =
-      providedRoles ?? (await this.getUserRoles(userDoc._id, session));
+    const roles = providedRoles ?? (await this.getUserRoles(userId, session));
     if (roles.filter((r) => r.admin).length > 0) {
       return true;
     }
@@ -361,12 +359,11 @@ export class RoleService<
   }
 
   public async isUserMember(
-    userDoc: UserDocument<string, TID>,
+    userId: TID,
     session?: ClientSession,
     providedRoles?: Array<RoleDocument<TID>>,
   ): Promise<boolean> {
-    const roles =
-      providedRoles ?? (await this.getUserRoles(userDoc._id, session));
+    const roles = providedRoles ?? (await this.getUserRoles(userId, session));
     if (roles.filter((r) => r.member).length > 0) {
       return true;
     }
@@ -374,12 +371,11 @@ export class RoleService<
   }
 
   public async isUserChild(
-    userDoc: UserDocument<string, TID>,
+    userId: TID,
     session?: ClientSession,
     providedRoles?: Array<RoleDocument<TID>>,
   ): Promise<boolean> {
-    const roles =
-      providedRoles ?? (await this.getUserRoles(userDoc._id, session));
+    const roles = providedRoles ?? (await this.getUserRoles(userId, session));
     if (roles.filter((r) => r.child).length > 0) {
       return true;
     }
@@ -387,27 +383,25 @@ export class RoleService<
   }
 
   public async isSystemUser(
-    userDoc: UserDocument<string, TID>,
+    userId: TID,
     session?: ClientSession,
     providedRoles?: Array<RoleDocument<TID>>,
   ): Promise<boolean> {
-    const roles =
-      providedRoles ?? (await this.getUserRoles(userDoc._id, session));
+    const roles = providedRoles ?? (await this.getUserRoles(userId, session));
     return roles.some((r) => r.system);
   }
 
   public async getMemberType(
-    userDoc: UserDocument<string, TID>,
+    userId: TID,
     session?: ClientSession,
     providedRoles?: Array<RoleDocument<TID>>,
   ): Promise<MemberType> {
-    const roles =
-      providedRoles ?? (await this.getUserRoles(userDoc._id, session));
-    if (await this.isSystemUser(userDoc, session, roles)) {
+    const roles = providedRoles ?? (await this.getUserRoles(userId, session));
+    if (await this.isSystemUser(userId, session, roles)) {
       return MemberType.System;
-    } else if (await this.isUserAdmin(userDoc, session, roles)) {
+    } else if (await this.isUserAdmin(userId, session, roles)) {
       return MemberType.Admin;
-    } else if (await this.isUserMember(userDoc, session, roles)) {
+    } else if (await this.isUserMember(userId, session, roles)) {
       return MemberType.User;
     } else {
       return MemberType.Anonymous;

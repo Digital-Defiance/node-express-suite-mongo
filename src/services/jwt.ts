@@ -4,37 +4,16 @@
  * @module services/jwt
  */
 
-import {
-  ITokenRole,
-  ITokenRoleDTO,
-  ITokenUser,
-} from '@digitaldefiance/suite-core-lib';
-import {
-  JsonWebTokenError,
-  JwtPayload,
-  TokenExpiredError as JwtTokenExpiredError,
-  sign,
-  verify,
-  VerifyOptions,
-} from 'jsonwebtoken';
-import { promisify } from 'util';
+import { ITokenRole, ITokenUser } from '@digitaldefiance/suite-core-lib';
+import { sign } from 'jsonwebtoken';
 import { UserDocument } from '../documents/user';
 import {
-  InvalidJwtTokenError,
-  TokenExpiredError,
   IApplication,
   IJwtSignResponse,
-  BaseService,
+  AbstractJwtService,
 } from '@digitaldefiance/node-express-suite';
 import { RoleService } from './role';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
-
-const verifyAsync = promisify<
-  string,
-  string | Buffer,
-  VerifyOptions,
-  JwtPayload | string
->(verify);
 
 /**
  * Service for JWT token operations including generation, signing, and verification.
@@ -46,7 +25,7 @@ export class JwtService<
   TTokenRole extends ITokenRole<TID, TDate> = ITokenRole<TID, TDate>,
   TTokenUser extends ITokenUser = ITokenUser,
   TApplication extends IApplication<TID> = IApplication<TID>,
-> extends BaseService<TID, TApplication> {
+> extends AbstractJwtService<TID, TTokenUser, TApplication> {
   private readonly roleService: RoleService<TID, TDate, TTokenRole>;
 
   constructor(application: TApplication) {
@@ -87,38 +66,5 @@ export class JwtService<
       roles: tokenRoles,
       roleDTOs: tokenRoleDTOs,
     };
-  }
-
-  public async verifyToken(token: string): Promise<TTokenUser | null> {
-    try {
-      const decoded = (await verifyAsync(
-        token,
-        this.application.environment.jwtSecret,
-        {
-          algorithms: [this.application.constants.JWT.ALGORITHM],
-        },
-      )) as JwtPayload;
-
-      if (
-        typeof decoded === 'object' &&
-        decoded !== null &&
-        'userId' in decoded &&
-        'roles' in decoded
-      ) {
-        return {
-          userId: decoded['userId'] as string,
-          roles: decoded['roles'] as ITokenRoleDTO[],
-        } as TTokenUser;
-      } else {
-        return null;
-      }
-    } catch (err) {
-      if (err instanceof JwtTokenExpiredError) {
-        throw new TokenExpiredError();
-      } else if (err instanceof JsonWebTokenError) {
-        throw err;
-      }
-      throw new InvalidJwtTokenError();
-    }
   }
 }

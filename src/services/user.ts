@@ -1076,7 +1076,10 @@ export class UserService<
     wallet?: Wallet,
     session?: ClientSession,
   ): Promise<BackendMember<TID>> {
-    const memberType = await this.roleService.getMemberType(userDoc, session);
+    const memberType = await this.roleService.getMemberType(
+      userDoc._id,
+      session,
+    );
     const user = new BackendMember<TID>(
       this.eciesService,
       memberType,
