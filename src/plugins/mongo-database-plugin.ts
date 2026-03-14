@@ -24,6 +24,7 @@ import {
   Environment,
   createNoOpDatabase,
 } from '@digitaldefiance/node-express-suite';
+import { MongooseDatabase } from '../services/mongoose-database';
 import type { BaseDocument } from '../documents/base';
 import type { IDocumentStore } from '../interfaces/mongoose-document-store';
 import type {
@@ -147,10 +148,15 @@ export class MongoDatabasePlugin<
   // ── IDatabasePlugin contract ──
 
   /**
-   * The IDatabase instance. For Mongo, this is a no-op adapter since
-   * the document store manages its own connection lifecycle.
+   * The IDatabase instance backed by the Mongoose connection.
+   * Returns a MongooseDatabase adapter that delegates to the real
+   * Mongoose connection, enabling BaseService.withTransaction and
+   * other IDatabase consumers to work correctly.
    */
   get database(): IDatabase {
+    if (this._documentStore.isConnected()) {
+      return new MongooseDatabase();
+    }
     return createNoOpDatabase();
   }
 
