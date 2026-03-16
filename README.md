@@ -45,7 +45,7 @@ Everything MongoDB/Mongoose-specific that was extracted from the base package:
 ## Quick Start
 
 ```typescript
-import { Application, emailServiceRegistry, DummyEmailService } from '@digitaldefiance/node-express-suite';
+import { Application, ServiceKeys, DummyEmailService } from '@digitaldefiance/node-express-suite';
 import {
   MongoDatabasePlugin,
   DatabaseInitializationService,
@@ -67,8 +67,8 @@ const mongoPlugin = new MongoDatabasePlugin({
 });
 app.useDatabasePlugin(mongoPlugin);
 
-// Register email service
-emailServiceRegistry.setService(new DummyEmailService(app));
+// Register email service via the ServiceContainer
+app.services.register(ServiceKeys.EMAIL, () => new DummyEmailService(app));
 
 await app.start();
 ```

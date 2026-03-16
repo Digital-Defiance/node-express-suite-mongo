@@ -32,7 +32,7 @@ import type { IConstants } from '@digitaldefiance/node-express-suite';
 import type { IServerInitResult } from '../../src/interfaces/server-init-result';
 import { IMongoApplication } from '../../src/interfaces/mongo-application';
 import { DummyEmailService } from '@digitaldefiance/node-express-suite';
-import { emailServiceRegistry } from '@digitaldefiance/node-express-suite';
+import { ServiceKeys } from '@digitaldefiance/node-express-suite';
 import type { BaseModelDocs } from '../../src/schemas/schema';
 
 const TestConstants: IConstants = createExpressConstants();
@@ -152,7 +152,7 @@ describe('Direct login HTTP endpoints (real MongoDB + Express)', () => {
     // Wire up Express + ApiRouter — same as Application.start() does
     expressApp = express();
     expressApp.use(express.json());
-    emailServiceRegistry.setService(new DummyEmailService(app as never));
+    app.services.register(ServiceKeys.EMAIL, () => new DummyEmailService(app as never));
     const apiRouter = new ApiRouter(mongoPlugin.mongoApplication!);
     expressApp.use('/api', apiRouter.router);
 

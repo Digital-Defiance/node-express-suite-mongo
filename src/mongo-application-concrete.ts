@@ -11,7 +11,7 @@ import {
   LocalhostConstants,
   AppRouter,
   BaseRouter,
-  emailServiceRegistry,
+  ServiceKeys,
   DummyEmailService,
 } from '@digitaldefiance/node-express-suite';
 import type { IConstants } from '@digitaldefiance/node-express-suite';
@@ -80,8 +80,7 @@ export class MongoApplicationConcrete<
 
     this.useDatabasePlugin(this.mongoPlugin);
 
-    emailServiceRegistry.setService(
-      new DummyEmailService<TID, typeof this>(this),
-    );
+    const emailService = new DummyEmailService<TID, typeof this>(this);
+    this.services.register(ServiceKeys.EMAIL, () => emailService);
   }
 }

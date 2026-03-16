@@ -20,7 +20,6 @@ import {
   KeyWrappingService,
 } from '@digitaldefiance/node-express-suite';
 import type { IEmailService } from '@digitaldefiance/node-express-suite';
-import { emailServiceRegistry } from '@digitaldefiance/node-express-suite';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { UserController } from '../controllers/user';
 import { BaseDocument } from '../documents';
@@ -100,15 +99,37 @@ export class ApiRouter<
   ) {
     super(application);
     this.registerServices();
-    this.jwtService = application.services.get(ServiceKeys.JWT);
-    this.roleService = application.services.get(ServiceKeys.ROLE);
+    this.jwtService = application.services.get<
+      JwtService<TID, TDate, TTokenRole, TTokenUser, TApplication>
+    >(ServiceKeys.JWT);
+    this.roleService = application.services.get<
+      RoleService<TID, TDate, TTokenRole>
+    >(ServiceKeys.ROLE);
     this.emailService = application.services.get(ServiceKeys.EMAIL);
-    this.keyWrappingService = application.services.get(
+    this.keyWrappingService = application.services.get<KeyWrappingService>(
       ServiceKeys.KEY_WRAPPING,
     );
-    this.eciesService = application.services.get(ServiceKeys.ECIES);
-    this.backupCodeService = application.services.get(ServiceKeys.BACKUP_CODE);
-    this.userService = application.services.get(ServiceKeys.USER);
+    this.eciesService = application.services.get<ECIESService<TID>>(
+      ServiceKeys.ECIES,
+    );
+    this.backupCodeService = application.services.get<
+      BackupCodeService<TID, TDate, TTokenRole, TApplication>
+    >(ServiceKeys.BACKUP_CODE);
+    this.userService = application.services.get<
+      UserService<
+        any,
+        TID,
+        TDate,
+        TLanguage,
+        TAccountStatus,
+        TEnvironment,
+        TConstants,
+        TBaseDocument,
+        TUser,
+        TTokenRole,
+        TApplication
+      >
+    >(ServiceKeys.USER);
     this.userController = new UserController<
       TID,
       TDate,
@@ -154,11 +175,6 @@ export class ApiRouter<
           ),
       );
     }
-    if (!app.services.has(ServiceKeys.EMAIL)) {
-      app.services.register(ServiceKeys.EMAIL, () =>
-        emailServiceRegistry.getService(),
-      );
-    }
     if (!app.services.has(ServiceKeys.KEY_WRAPPING)) {
       app.services.register(
         ServiceKeys.KEY_WRAPPING,
@@ -186,9 +202,11 @@ export class ApiRouter<
         () =>
           new BackupCodeService<TID, TDate, TTokenRole, TApplication>(
             app,
-            app.services.get(ServiceKeys.ECIES),
-            app.services.get(ServiceKeys.KEY_WRAPPING),
-            app.services.get(ServiceKeys.ROLE),
+            app.services.get<ECIESService<TID>>(ServiceKeys.ECIES),
+            app.services.get<KeyWrappingService>(ServiceKeys.KEY_WRAPPING),
+            app.services.get<RoleService<TID, TDate, TTokenRole>>(
+              ServiceKeys.ROLE,
+            ),
           ),
       );
     }
@@ -210,10 +228,14 @@ export class ApiRouter<
             TApplication
           >(
             app,
-            app.services.get(ServiceKeys.ROLE),
+            app.services.get<RoleService<TID, TDate, TTokenRole>>(
+              ServiceKeys.ROLE,
+            ),
             app.services.get(ServiceKeys.EMAIL),
-            app.services.get(ServiceKeys.KEY_WRAPPING),
-            app.services.get(ServiceKeys.BACKUP_CODE),
+            app.services.get<KeyWrappingService>(ServiceKeys.KEY_WRAPPING),
+            app.services.get<
+              BackupCodeService<TID, TDate, TTokenRole, TApplication>
+            >(ServiceKeys.BACKUP_CODE),
           ),
       );
     }

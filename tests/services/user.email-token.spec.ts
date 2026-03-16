@@ -8,7 +8,7 @@ import {
 } from '@digitaldefiance/suite-core-lib';
 import { LocalhostConstants as AppConstants } from '@digitaldefiance/node-express-suite';
 import { ModelRegistry } from '../../src/model-registry';
-import { emailServiceRegistry } from '@digitaldefiance/node-express-suite';
+import { ServiceKeys } from '@digitaldefiance/node-express-suite';
 import { BackupCodeService } from '../../src/services/backup-code';
 import { DummyEmailService } from '@digitaldefiance/node-express-suite';
 import { KeyWrappingService } from '@digitaldefiance/node-express-suite';
@@ -17,8 +17,7 @@ import { UserService } from '../../src/services/user';
 import { createApplicationMock } from '../__tests__/helpers/application.mock';
 
 beforeAll(() => {
-  const app = createApplicationMock();
-  emailServiceRegistry.setService(new DummyEmailService(app));
+  // Email service is now registered per-test via ServiceContainer in makeSvc
 });
 
 beforeEach(() => {
@@ -86,7 +85,8 @@ function makeSvc(overrides: {
   );
   const role = new RoleService(application);
   if (overrides.roleService) Object.assign(role, overrides.roleService);
-  const email = emailServiceRegistry.getService();
+  application.services.register(ServiceKeys.EMAIL, () => new DummyEmailService(application));
+  const email = application.services.get(ServiceKeys.EMAIL);
   const keyWrap = new KeyWrappingService();
   const eciesService = new ECIESService();
   const backupCodeService = new BackupCodeService(

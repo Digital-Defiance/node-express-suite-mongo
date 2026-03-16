@@ -5,7 +5,7 @@ import request from 'supertest';
 import { IEmailService } from '@digitaldefiance/node-express-suite';
 import { IMongoEnvironment } from '../../src/interfaces/environment-mongo';
 import { ModelRegistry } from '../../src/model-registry';
-import { emailServiceRegistry } from '@digitaldefiance/node-express-suite';
+import { ServiceKeys } from '@digitaldefiance/node-express-suite';
 import { ApiRouter } from '../../src/routers/api';
 import { SystemUserService } from '@digitaldefiance/node-express-suite';
 import { createApplicationMock } from '../__tests__/helpers/application.mock';
@@ -39,7 +39,6 @@ describe('ApiRouter', () => {
     const mockEmailService: IEmailService = {
       sendEmail: jest.fn().mockResolvedValue(undefined),
     };
-    emailServiceRegistry.setService(mockEmailService);
 
     // Mock ModelRegistry to avoid model registration errors
     const mockModel = {
@@ -77,6 +76,7 @@ describe('ApiRouter', () => {
         } as IMongoEnvironment,
       },
     );
+    application.services.register(ServiceKeys.EMAIL, () => mockEmailService);
     const apiRouter = new ApiRouter(application);
     app.use('/api', apiRouter.router);
 

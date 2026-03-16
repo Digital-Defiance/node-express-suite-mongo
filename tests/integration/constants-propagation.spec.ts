@@ -24,7 +24,7 @@ import {
   Environment,
   BaseApplication,
   DummyEmailService,
-  emailServiceRegistry,
+  ServiceKeys,
 } from '@digitaldefiance/node-express-suite';
 import type { IConstants } from '@digitaldefiance/node-express-suite';
 import type { IServerInitResult } from '../../src/interfaces/server-init-result';
@@ -190,7 +190,7 @@ describe('Constants propagation through application hierarchy', () => {
     // Wire up Express + ApiRouter
     expressApp = express();
     expressApp.use(express.json());
-    emailServiceRegistry.setService(new DummyEmailService(app as never));
+    app.services.register(ServiceKeys.EMAIL, () => new DummyEmailService(app as never));
     apiRouter = new ApiRouter(mongoPlugin.mongoApplication!);
     expressApp.use('/api', apiRouter.router);
 
