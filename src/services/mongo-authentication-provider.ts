@@ -38,7 +38,7 @@ export class MongoAuthenticationProvider<
 
   async findUserById(
     userId: string,
-  ): Promise<IAuthenticatedUser<TLanguage> | null> {
+  ): Promise<IAuthenticatedUser<TLanguage, TID> | null> {
     const UserModel = ModelRegistry.instance.getTypedModel<
       UserDocument<TLanguage, TID>
     >(BaseModelName.User);
