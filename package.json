@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-express-suite-mongo",
-  "version": "4.24.1",
+  "version": "4.24.2",
   "description": "MongoDB/Mongoose extensions for @digitaldefiance/node-express-suite",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -24,7 +24,7 @@
     "@digitaldefiance/ecies-lib": "^5.0.0",
     "@digitaldefiance/i18n-lib": "^4.6.4",
     "@digitaldefiance/node-ecies-lib": "^5.0.0",
-    "@digitaldefiance/node-express-suite": "^4.24.1",
+    "@digitaldefiance/node-express-suite": "^4.24.2",
     "@digitaldefiance/suite-core-lib": "^4.24.0"
   },
   "devDependencies": {
