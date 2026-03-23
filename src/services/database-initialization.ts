@@ -732,6 +732,9 @@ export abstract class DatabaseInitializationService {
                 darkMode: false,
                 accountStatus: AccountStatus.Active,
                 directChallenge: true, // allow direct challenge login by default
+                ...(application.constants.EnableDisplayName
+                  ? { displayName: application.constants.SystemUser }
+                  : {}),
                 createdAt: now,
                 updatedAt: now,
                 createdBy: systemUserId as TID,
@@ -836,6 +839,9 @@ export abstract class DatabaseInitializationService {
                 emailVerified: true,
                 accountStatus: AccountStatus.Active,
                 directChallenge: true,
+                ...(application.constants.EnableDisplayName
+                  ? { displayName: application.constants.AdministratorUser }
+                  : {}),
                 createdAt: now,
                 updatedAt: now,
                 createdBy: systemUserId as TID,
@@ -944,6 +950,9 @@ export abstract class DatabaseInitializationService {
                 emailVerified: true,
                 accountStatus: AccountStatus.Active,
                 directChallenge: true,
+                ...(application.constants.EnableDisplayName
+                  ? { displayName: application.constants.MemberUser }
+                  : {}),
                 createdAt: now,
                 updatedAt: now,
                 createdBy: systemUserId as TID,

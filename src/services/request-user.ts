@@ -66,6 +66,7 @@ export class RequestUserService<
       darkMode: userDoc.darkMode,
       siteLanguage: userDoc.siteLanguage as string,
       ...(userDoc.lastLogin && { lastLogin: userDoc.lastLogin.toString() }),
+      ...(userDoc.displayName && { displayName: userDoc.displayName }),
     } as TRequestUserDTO;
   }
 
@@ -96,6 +97,10 @@ export class RequestUserService<
 
     if (requestUser.lastLogin) {
       hydratedUser.lastLogin = new Date(requestUser.lastLogin);
+    }
+
+    if (requestUser.displayName) {
+      hydratedUser.displayName = requestUser.displayName;
     }
 
     return hydratedUser;

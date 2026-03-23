@@ -34,6 +34,7 @@ describe('UserSchema validation with Mongoose', () => {
     timezone: 'America/New_York',
     siteLanguage: LanguageCodes.EN_US,
     accountStatus: AccountStatus.Active,
+    displayName: 'Test User',
     createdBy: new Types.ObjectId(),
     updatedBy: new Types.ObjectId(),
   };

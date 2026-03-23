@@ -18,6 +18,7 @@ import {
   PlatformID,
 } from '@digitaldefiance/node-ecies-lib';
 import {
+  Constants,
   AccountStatus,
   EmailTokenType,
   GenericValidationError,
@@ -29,7 +30,7 @@ import {
   UsernameOrEmailRequiredError,
 } from '@digitaldefiance/suite-core-lib';
 import type { NextFunction, Request, Response } from 'express';
-import { body } from 'express-validator';
+import { body, ValidationChain } from 'express-validator';
 import { z } from 'zod';
 import {
   BackupCode,
@@ -65,29 +66,124 @@ import { BackupCodeService } from '../services/backup-code';
 import { RoleService } from '../services/role';
 import { UserService } from '../services/user';
 import { withMongoTransaction } from '../utils/mongo-transaction';
+import { getCoreI18nEngine } from '@digitaldefiance/i18n-lib';
 
 const isString = (v: unknown): v is string => typeof v === 'string';
+const i18nEngine = getCoreI18nEngine();
 
-const RegisterSchema = z.object({
-  username: z.string(),
-  email: z.string(),
-  timezone: z.string(),
-  password: z.string().min(8).optional(),
-  mnemonic: z.string().min(1).optional(),
-});
+const RegisterSchema = z
+  .object({
+    username: z.string({
+      required_error: i18nEngine.translateStringKey(
+        SuiteCoreStringKey.Validation_Required,
+      ),
+    }),
+    email: z.string({
+      required_error: i18nEngine.translateStringKey(
+        SuiteCoreStringKey.Validation_Required,
+      ),
+    }),
+    timezone: z.string({
+      required_error: i18nEngine.translateStringKey(
+        SuiteCoreStringKey.Validation_Required,
+      ),
+    }),
+    password: z
+      .string()
+      .min(
+        8,
+        i18nEngine.translateStringKey(
+          SuiteCoreStringKey.Validation_PasswordMinLengthTemplate,
+        ),
+      )
+      .optional(),
+    mnemonic: z
+      .string()
+      .min(
+        1,
+        i18nEngine.translateStringKey(
+          SuiteCoreStringKey.Validation_MnemonicRegex,
+        ),
+      )
+      .optional(),
+    ...(Constants.EnableDisplayName
+      ? {
+          displayName: z
+            .string()
+            .min(Constants.DisplayNameMinLength)
+            .max(Constants.DisplayNameMaxLength)
+            .regex(
+              Constants.DisplayNameRegex,
+              i18nEngine.translateStringKey(
+                SuiteCoreStringKey.Validation_DisplayNameRegexErrorTemplate,
+              ),
+            ),
+        }
+      : {}),
+  })
+  .refine((data) => data.password || data.mnemonic, {
+    message: i18nEngine.translateStringKey(
+      SuiteCoreStringKey.Validation_MnemonicOrPasswordRequired,
+    ),
+    path: ['password'],
+  });
 
 const EmailLoginChallengeSchema = z.object({
-  token: z.string(),
-  signature: z.string(),
-  email: z.string().optional(),
-  username: z.string().optional(),
+  token: z.string({
+    required_error: i18nEngine.translateStringKey(
+      SuiteCoreStringKey.Validation_TokenRequired,
+    ),
+  }),
+  signature: z.string({
+    required_error: i18nEngine.translateStringKey(
+      SuiteCoreStringKey.Validation_Required,
+    ),
+  }),
+  email: z
+    .string()
+    .regex(
+      Constants.EmailRegex,
+      i18nEngine.translateStringKey(SuiteCoreStringKey.Validation_InvalidEmail),
+    )
+    .optional(),
+  username: z
+    .string()
+    .regex(
+      Constants.UsernameRegex,
+      i18nEngine.translateStringKey(
+        SuiteCoreStringKey.Validation_UsernameRegexErrorTemplate,
+      ),
+    )
+    .optional(),
 });
 
 const DirectLoginChallengeSchema = z.object({
-  challenge: z.string(),
-  signature: z.string(),
-  email: z.string().optional(),
-  username: z.string().optional(),
+  challenge: z.string({
+    required_error: i18nEngine.translateStringKey(
+      SuiteCoreStringKey.Validation_Required,
+    ),
+  }),
+  signature: z.string({
+    required_error: i18nEngine.translateStringKey(
+      SuiteCoreStringKey.Validation_Required,
+    ),
+  }),
+  email: z
+    .string()
+    .regex(
+      Constants.EmailRegex,
+      i18nEngine.translateStringKey(SuiteCoreStringKey.Validation_InvalidEmail),
+    )
+    .optional(),
+  username: z
+    .string()
+    .regex(
+      Constants.UsernameRegex,
+      i18nEngine.translateStringKey(
+        SuiteCoreStringKey.Validation_UsernameRegexErrorTemplate,
+      ),
+    )
+    .optional(),
 });
 
 /**
@@ -208,6 +304,7 @@ export class UserController<
       darkMode: req.user.darkMode,
       siteLanguage: req.user.siteLanguage,
       directChallenge: req.user.directChallenge,
+      ...(req.user.displayName && { displayName: req.user.displayName }),
       ...(req.user.lastLogin && { lastLogin: req.user.lastLogin }),
     };
     return {
@@ -276,7 +373,7 @@ export class UserController<
     schema: RegisterSchema,
     validation: function (validationLanguage: TLanguage) {
       const constants = this.constants;
-      return [
+      const validationChain: ValidationChain[] = [
         body('username')
           .matches(constants.UsernameRegex)
           .withMessage(
@@ -326,6 +423,31 @@ export class UserController<
             ),
           ),
       ];
+
+      if (constants.EnableDisplayName) {
+        validationChain.push(
+          body('displayName')
+            .isString()
+            .notEmpty()
+            .withMessage(
+              getSuiteCoreTranslation(
+                SuiteCoreStringKey.Validation_Required,
+                undefined,
+                validationLanguage,
+              ),
+            )
+            .matches(constants.DisplayNameRegex)
+            .withMessage(
+              getSuiteCoreTranslation(
+                SuiteCoreStringKey.Validation_DisplayNameRegexErrorTemplate,
+                undefined,
+                validationLanguage,
+              ),
+            ),
+        );
+      }
+
+      return validationChain;
     },
   })
   async register(
@@ -341,7 +463,14 @@ export class UserController<
         return await requireValidatedFieldsAsync(
           req,
           RegisterSchema,
-          async ({ username, email, timezone, password, mnemonic }) => {
+          async ({
+            username,
+            email,
+            timezone,
+            password,
+            mnemonic,
+            displayName,
+          }) => {
             if (
               !isString(username) ||
               !isString(email) ||
@@ -364,6 +493,9 @@ export class UserController<
                 username: username.trim(),
                 email: email.trim(),
                 timezone: timezone,
+                ...(displayName
+                  ? { displayName: (displayName as string).trim() }
+                  : {}),
               },
               undefined,
               undefined,
@@ -608,6 +740,7 @@ export class UserController<
           siteLanguage: userDoc?.siteLanguage || '',
           darkMode: userDoc?.darkMode || false,
           directChallenge: userDoc?.directChallenge || false,
+          ...(userDoc?.displayName ? { displayName: userDoc.displayName } : {}),
         },
       },
     };
@@ -679,6 +812,25 @@ export class UserController<
               validationLanguage,
             ),
           ),
+        ...(Constants.EnableDisplayName
+          ? [
+              body('displayName')
+                .optional()
+                .isString()
+                .isLength({
+                  min: Constants.DisplayNameMinLength,
+                  max: Constants.DisplayNameMaxLength,
+                })
+                .matches(Constants.DisplayNameRegex)
+                .withMessage(
+                  getSuiteCoreTranslation(
+                    SuiteCoreStringKey.Validation_DisplayNameRegexErrorTemplate,
+                    undefined,
+                    validationLanguage,
+                  ),
+                ),
+            ]
+          : []),
       ];
     },
   })
@@ -699,6 +851,7 @@ export class UserController<
           currency,
           darkMode,
           directChallenge,
+          displayName,
         } = this.validatedBody;
         if (!req.user) {
           throw new HandleableError(
@@ -723,6 +876,9 @@ export class UserController<
             ...(darkMode !== undefined && { darkMode: darkMode as boolean }),
             ...(directChallenge !== undefined && {
               directChallenge: directChallenge as boolean,
+            }),
+            ...(displayName !== undefined && {
+              displayName: displayName as string,
             }),
           },
           sess,

@@ -77,6 +77,22 @@ export function createUserSchema<T extends IConstants = IConstants>(
             )),
       },
     },
+    ...(constants.EnableDisplayName
+      ? {
+          displayName: {
+            type: String,
+            required: true,
+            unique: false,
+            validate: {
+              validator: (v: string) => constants.DisplayNameRegex.test(v),
+              message: () =>
+                getSuiteCoreTranslation(
+                  SuiteCoreStringKey.Validation_DisplayNameRegexErrorTemplate,
+                ),
+            },
+          },
+        }
+      : {}),
     /**
      * The user's public key, stored in hex format.
      */

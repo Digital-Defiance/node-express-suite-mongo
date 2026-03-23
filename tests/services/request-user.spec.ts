@@ -49,6 +49,52 @@ describe('RequestUserService', () => {
       });
     });
 
+    it('should include displayName when present on user document', () => {
+      const userDoc = {
+        _id: new ObjectId(),
+        email: 'test@example.com',
+        username: 'testuser',
+        timezone: 'UTC',
+        emailVerified: true,
+        darkMode: false,
+        siteLanguage: 'en',
+        displayName: 'Test Display Name',
+      } as any;
+
+      const roles = [
+        {
+          _id: new ObjectId(),
+          name: Role.Member,
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+          createdAt: new Date(),
+          createdBy: new ObjectId(),
+          updatedAt: new Date(),
+          updatedBy: new ObjectId(),
+        },
+      ] as any;
+
+      const result = RequestUserService.makeRequestUserDTO(userDoc, roles);
+      expect(result.displayName).toBe('Test Display Name');
+    });
+
+    it('should not include displayName when absent from user document', () => {
+      const userDoc = {
+        _id: new ObjectId(),
+        email: 'test@example.com',
+        username: 'testuser',
+        timezone: 'UTC',
+        emailVerified: true,
+        darkMode: false,
+        siteLanguage: 'en',
+      } as any;
+
+      const result = RequestUserService.makeRequestUserDTO(userDoc, []);
+      expect(result.displayName).toBeUndefined();
+    });
+
     it('should throw if user document missing _id', () => {
       const userDoc = { email: 'test@example.com' } as any;
       expect(() =>
@@ -161,6 +207,55 @@ describe('RequestUserService', () => {
 
       const result = RequestUserService.hydrateRequestUser(dto);
       expect(result.lastLogin).toBeInstanceOf(Date);
+    });
+
+    it('should hydrate displayName when present', () => {
+      const dto = {
+        id: new ObjectId().toString(),
+        email: 'test@example.com',
+        username: 'testuser',
+        timezone: 'UTC',
+        currency: 'USD',
+        directChallenge: false,
+        emailVerified: true,
+        darkMode: false,
+        siteLanguage: 'en',
+        roles: [],
+        rolePrivileges: {
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+        },
+        displayName: 'Hydrated User',
+      } as any;
+
+      const result = RequestUserService.hydrateRequestUser(dto);
+      expect(result.displayName).toBe('Hydrated User');
+    });
+
+    it('should not set displayName when absent', () => {
+      const dto = {
+        id: new ObjectId().toString(),
+        email: 'test@example.com',
+        username: 'testuser',
+        timezone: 'UTC',
+        currency: 'USD',
+        directChallenge: false,
+        emailVerified: true,
+        darkMode: false,
+        siteLanguage: 'en',
+        roles: [],
+        rolePrivileges: {
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+        },
+      } as any;
+
+      const result = RequestUserService.hydrateRequestUser(dto);
+      expect(result.displayName).toBeUndefined();
     });
   });
 });

@@ -3,6 +3,7 @@
  */
 import { createCoreI18nEngine } from '@digitaldefiance/i18n-lib';
 import {
+  initSuiteCoreI18nEngine,
   SuiteCoreComponent,
   SuiteCoreComponentStrings,
 } from '@digitaldefiance/suite-core-lib';
@@ -16,6 +17,14 @@ jest.mock('argon2', () => ({
   verify: jest.fn().mockResolvedValue(true),
   argon2id: 2,
 }));
+
+// Initialize suite-core i18n engine (registers SuiteCoreStringKey enum
+// so that getCoreI18nEngine().translateStringKey() works at module load time)
+// Also initializes the ecies i18n engine to prevent registerIfNotExists errors
+// when ecies-lib code paths are triggered during tests
+import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
+initSuiteCoreI18nEngine();
+getEciesI18nEngine();
 
 // Initialize core i18n engine
 const engine = createCoreI18nEngine(undefined, {

@@ -220,6 +220,40 @@ describe('UserController - GET /settings', () => {
         directChallenge: false,
       });
     });
+
+    it('should return displayName when present on user document', async () => {
+      const mockUserDocWithDisplayName = {
+        _id: mockUserId,
+        email: 'test@example.com',
+        username: 'testuser',
+        timezone: 'America/New_York',
+        currency: 'USD',
+        siteLanguage: 'en-US',
+        darkMode: true,
+        directChallenge: false,
+        displayName: 'Test Display Name',
+      };
+
+      mockApp.getModel.mockReturnValue({
+        findById: jest.fn().mockResolvedValue(mockUserDocWithDisplayName),
+      });
+
+      const response = await request(app)
+        .get('/api/user/settings')
+        .set('Authorization', mockToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.settings.displayName).toBe('Test Display Name');
+    });
+
+    it('should not include displayName when absent from user document', async () => {
+      const response = await request(app)
+        .get('/api/user/settings')
+        .set('Authorization', mockToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.settings.displayName).toBeUndefined();
+    });
   });
 
   describe('authentication', () => {
@@ -515,6 +549,21 @@ describe('UserController - POST /settings', () => {
       );
     });
 
+    it('should update displayName', async () => {
+      const updatedUser = { _id: 'user-id', displayName: 'New Name' };
+      mockUserService.updateUserSettings.mockResolvedValue(updatedUser as any);
+      const response = await request(app)
+        .post('/api/user/settings')
+        .set('Authorization', mockToken)
+        .send({ displayName: 'New Name' });
+      expect(response.status).toBe(200);
+      expect(mockUserService.updateUserSettings).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ displayName: 'New Name' }),
+        undefined,
+      );
+    });
+
     it('should update multiple settings at once', async () => {
       const updatedUser = {
         _id: 'user-id',
@@ -617,6 +666,15 @@ describe('UserController - POST /settings', () => {
         .post('/api/user/settings')
         .set('Authorization', mockToken)
         .send({ currency: 123 });
+      expect(response.status).toBe(422);
+      expect(mockUserService.updateUserSettings).not.toHaveBeenCalled();
+    });
+
+    it('should reject displayName that is too short', async () => {
+      const response = await request(app)
+        .post('/api/user/settings')
+        .set('Authorization', mockToken)
+        .send({ displayName: 'A' });
       expect(response.status).toBe(422);
       expect(mockUserService.updateUserSettings).not.toHaveBeenCalled();
     });

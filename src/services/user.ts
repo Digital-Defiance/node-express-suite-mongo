@@ -73,6 +73,7 @@ import {
   SystemUserService,
   InvalidNewPasswordError,
   debugLog,
+  InvalidDisplayNameError,
 } from '@digitaldefiance/node-express-suite';
 import { ModelRegistry } from '../model-registry';
 import { MnemonicService } from './mnemonic';
@@ -718,6 +719,9 @@ export class UserService<
       ...newUser,
       email: newUser.email.toLowerCase(),
       emailVerified: false,
+      ...(this.application.constants.EnableDisplayName
+        ? { displayName: newUser.displayName }
+        : {}),
       darkMode: false,
       accountStatus: AccountStatus.PendingEmailVerification,
       siteLanguage: 'en-US' as TLanguage,
@@ -791,6 +795,13 @@ export class UserService<
     }
     if (password && !this.application.constants.PasswordRegex.test(password)) {
       throw new InvalidNewPasswordError();
+    }
+    if (
+      this.application.constants.EnableDisplayName &&
+      (!userData.displayName ||
+        !this.application.constants.DisplayNameRegex.test(userData.displayName))
+    ) {
+      throw new InvalidDisplayNameError();
     }
 
     const UserModel = ModelRegistry.instance.getTypedModel<
@@ -1808,6 +1819,7 @@ export class UserService<
       currency?: string;
       darkMode?: boolean;
       directChallenge?: boolean;
+      displayName?: string;
     },
     session?: ClientSession,
   ): Promise<IRequestUserDTO> {
@@ -1858,6 +1870,8 @@ export class UserService<
           userDoc.currency = settings.currency;
         if (settings.directChallenge !== undefined)
           userDoc.directChallenge = settings.directChallenge;
+        if (settings.displayName !== undefined)
+          userDoc.displayName = settings.displayName;
 
         await userDoc.save({ session: sess });
 
