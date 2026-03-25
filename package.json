@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-express-suite-mongo",
-  "version": "4.25.1",
+  "version": "4.25.2",
   "description": "MongoDB/Mongoose extensions for @digitaldefiance/node-express-suite",
   "main": "src/index.js",
   "types": "src/index.d.ts",

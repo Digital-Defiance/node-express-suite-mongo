@@ -66,10 +66,10 @@ import { BackupCodeService } from '../services/backup-code';
 import { RoleService } from '../services/role';
 import { UserService } from '../services/user';
 import { withMongoTransaction } from '../utils/mongo-transaction';
-import { getCoreI18nEngine } from '@digitaldefiance/i18n-lib';
+import { getSuiteCoreI18nEngine } from '@digitaldefiance/suite-core-lib';
 
 const isString = (v: unknown): v is string => typeof v === 'string';
-const i18nEngine = getCoreI18nEngine();
+const i18nEngine = getSuiteCoreI18nEngine();
 
 const RegisterSchema = z
   .object({
