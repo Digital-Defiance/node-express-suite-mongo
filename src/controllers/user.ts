@@ -519,7 +519,9 @@ export class UserController<
                   SuiteCoreStringKey.Registration_Success,
                   { MNEMONIC: resultMnemonic },
                 ),
-                mnemonic: resultMnemonic,
+                // Only return the mnemonic when server-generated (user didn't
+                // provide their own) so the frontend can display it once.
+                ...(mnemonic ? {} : { mnemonic: resultMnemonic }),
                 backupCodes,
               },
             };
