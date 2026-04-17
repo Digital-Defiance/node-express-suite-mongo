@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-express-suite-mongo",
-  "version": "4.26.8",
+  "version": "4.26.9",
   "description": "MongoDB/Mongoose extensions for @digitaldefiance/node-express-suite",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -21,11 +21,11 @@
   },
   "peerDependencies": {
     "@digitaldefiance/branded-interface": "^0.0.5",
-    "@digitaldefiance/ecies-lib": "^5.1.3",
-    "@digitaldefiance/i18n-lib": "^4.7.2",
-    "@digitaldefiance/node-ecies-lib": "^5.1.3",
+    "@digitaldefiance/ecies-lib": "^5.1.4",
+    "@digitaldefiance/i18n-lib": "^4.7.3",
+    "@digitaldefiance/node-ecies-lib": "^5.1.4",
     "@digitaldefiance/node-express-suite": "^4.26.8",
-    "@digitaldefiance/suite-core-lib": "^4.26.5"
+    "@digitaldefiance/suite-core-lib": "^4.26.6"
   },
   "devDependencies": {
     "mongodb-memory-server": "^10.1.4"
