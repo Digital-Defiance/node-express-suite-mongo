@@ -534,7 +534,7 @@ export class UserController<
     );
   }
 
-  @Post('/account-verification', {
+  @Post('/verify-email', {
     validation: function (validationLanguage: TLanguage) {
       const constants = this.constants;
       return [
