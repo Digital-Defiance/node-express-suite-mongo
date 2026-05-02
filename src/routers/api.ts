@@ -18,6 +18,7 @@ import {
   BaseRouter,
   OpenApiController,
   KeyWrappingService,
+  TotpService,
 } from '@digitaldefiance/node-express-suite';
 import type { IEmailService } from '@digitaldefiance/node-express-suite';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
@@ -237,6 +238,12 @@ export class ApiRouter<
               BackupCodeService<TID, TDate, TTokenRole, TApplication>
             >(ServiceKeys.BACKUP_CODE),
           ),
+      );
+    }
+    if (!app.services.has(ServiceKeys.TOTP)) {
+      app.services.register(
+        ServiceKeys.TOTP,
+        () => new TotpService(),
       );
     }
   }

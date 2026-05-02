@@ -250,9 +250,51 @@ export function createUserSchema<T extends IConstants = IConstants>(
       ],
       default: [],
     },
+    /**
+     * Whether TOTP 2FA is enabled for this account.
+     */
+    totpEnabled: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
+    /**
+     * TOTP secret encrypted with the user's ECIES public key.
+     * Present only when totpEnabled is true.
+     */
+    totpSecret: {
+      type: String,
+      required: false,
+    },
+    /**
+     * Pending TOTP secret encrypted with the user's ECIES public key.
+     * Present during setup flow before confirmation.
+     */
+    totpPendingSecret: {
+      type: String,
+      required: false,
+    },
   };
 
-  return new Schema(definition, { timestamps: true });
+  const schema = new Schema(definition, { timestamps: true });
+
+  /**
+   * Schema-level validator: when totpEnabled is true, totpSecret must be present and non-empty.
+   */
+  schema.pre('validate', function (next) {
+    if (this.get('totpEnabled') === true) {
+      const totpSecret = this.get('totpSecret');
+      if (!totpSecret || (typeof totpSecret === 'string' && totpSecret.trim() === '')) {
+        this.invalidate(
+          'totpSecret',
+          'totpSecret is required when totpEnabled is true',
+        );
+      }
+    }
+    next();
+  });
+
+  return schema;
 }
 
 /**

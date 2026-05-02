@@ -49,11 +49,14 @@ import {
   IApiRequestUserResponse,
   IApiUserSettingsResponse,
   IApiBackupCodesResponse,
+  IApiTotpSetupResponse,
   IConstants,
   IStatusCodeResponse,
   findAuthToken,
   SystemUserService,
   requireValidatedFieldsAsync,
+  ServiceKeys,
+  TotpService,
 } from '@digitaldefiance/node-express-suite';
 import type { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import { JwtService } from '../services/jwt';
@@ -67,6 +70,7 @@ import { RoleService } from '../services/role';
 import { UserService } from '../services/user';
 import { withMongoTransaction } from '../utils/mongo-transaction';
 import { getSuiteCoreI18nEngine } from '@digitaldefiance/suite-core-lib';
+import { verify as jwtVerify, JwtPayload, TokenExpiredError as JwtTokenExpiredError } from 'jsonwebtoken';
 
 const isString = (v: unknown): v is string => typeof v === 'string';
 const i18nEngine = getSuiteCoreI18nEngine();
@@ -743,6 +747,7 @@ export class UserController<
           darkMode: userDoc?.darkMode || false,
           directChallenge: userDoc?.directChallenge || false,
           ...(userDoc?.displayName ? { displayName: userDoc.displayName } : {}),
+          totpEnabled: userDoc?.totpEnabled || false,
         },
       },
     };
@@ -1001,6 +1006,444 @@ export class UserController<
           SuiteCoreStringKey.BackupCodeRecovery_YourNewCodes,
         ),
         backupCodes: codes,
+      },
+    };
+  }
+
+  @Post('/totp/setup', { auth: true })
+  async totpSetup(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiTotpSetupResponse | ApiErrorResponse>> {
+    if (!req.user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    const UserModel = this.application.getModel<UserDocument<string, TID>>(
+      BaseModelName.User,
+    );
+    const userDoc = await UserModel.findById(req.user.id);
+    if (!userDoc) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_UserNotFound),
+        ),
+        { statusCode: 404 },
+      );
+    }
+
+    if (userDoc.totpEnabled) {
+      throw new HandleableError(
+        new Error('TOTP is already active'),
+        { statusCode: 409 },
+      );
+    }
+
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
+    const secret = totpService.generateSecret();
+
+    // Encrypt the secret with the system user's ECIES public key so the server
+    // can decrypt it later without requiring the user's mnemonic/password
+    // (needed for the TOTP verify endpoint which only receives a TOTP code).
+    const encryptedSecret = this.systemUser.encryptData(
+      Buffer.from(secret, 'utf-8'),
+      this.systemUser.publicKey,
+    );
+
+    // Store encrypted secret as totpPendingSecret (overwrite any existing)
+    userDoc.set('totpPendingSecret', encryptedSecret.toString('hex'));
+    await userDoc.save();
+
+    const provisioningUri = totpService.generateProvisioningUri(
+      secret,
+      userDoc.email,
+      this.application.environment.host,
+    );
+
+    return {
+      statusCode: 200,
+      response: {
+        provisioningUri,
+        secret,
+        message: 'TOTP setup initiated',
+      },
+    };
+  }
+
+  @Post('/totp/confirm', { auth: true })
+  async totpConfirm(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    if (!req.user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_NoUserOnRequest,
+          ),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    const { code } = req.body as { code?: unknown };
+
+    // Validate code field is exactly 6 digits
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+      throw new HandleableError(
+        new Error('Code must be exactly 6 digits'),
+        { statusCode: 400 },
+      );
+    }
+
+    const UserModel = this.application.getModel<UserDocument<string, TID>>(
+      BaseModelName.User,
+    );
+    const userDoc = await UserModel.findById(req.user.id);
+    if (!userDoc) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_UserNotFound),
+        ),
+        { statusCode: 404 },
+      );
+    }
+
+    if (!userDoc.totpPendingSecret) {
+      throw new HandleableError(
+        new Error('TOTP setup has not been initiated'),
+        { statusCode: 400 },
+      );
+    }
+
+    // Decrypt the pending secret using the system user's private key
+    const decryptedSecret = this.systemUser
+      .decryptData(Buffer.from(userDoc.totpPendingSecret, 'hex'))
+      .toString('utf-8');
+
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
+
+    if (!totpService.verifyCode(decryptedSecret, code)) {
+      throw new HandleableError(
+        new Error('Invalid TOTP code'),
+        { statusCode: 400 },
+      );
+    }
+
+    // Move encrypted totpPendingSecret → totpSecret, enable TOTP, clear pending
+    userDoc.set('totpSecret', userDoc.totpPendingSecret);
+    userDoc.set('totpEnabled', true);
+    userDoc.set('totpPendingSecret', undefined);
+    await userDoc.save();
+
+    return {
+      statusCode: 200,
+      response: {
+        message: 'TOTP has been enabled successfully',
+      },
+    };
+  }
+
+  @Post('/totp/disable', { auth: true })
+  async totpDisable(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    if (!req.user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_NoUserOnRequest,
+          ),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    const { code } = req.body as { code?: unknown };
+
+    // Validate code field is exactly 6 digits
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+      throw new HandleableError(
+        new Error('Code must be exactly 6 digits'),
+        { statusCode: 400 },
+      );
+    }
+
+    const UserModel = this.application.getModel<UserDocument<string, TID>>(
+      BaseModelName.User,
+    );
+    const userDoc = await UserModel.findById(req.user.id);
+    if (!userDoc) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_UserNotFound),
+        ),
+        { statusCode: 404 },
+      );
+    }
+
+    if (!userDoc.totpEnabled) {
+      throw new HandleableError(
+        new Error('TOTP is not currently active'),
+        { statusCode: 409 },
+      );
+    }
+
+    // Decrypt the active secret using the system user's private key
+    const decryptedSecret = this.systemUser
+      .decryptData(Buffer.from(userDoc.totpSecret as string, 'hex'))
+      .toString('utf-8');
+
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
+
+    if (!totpService.verifyCode(decryptedSecret, code)) {
+      throw new HandleableError(
+        new Error('Invalid TOTP code'),
+        { statusCode: 400 },
+      );
+    }
+
+    // Disable TOTP: set totpEnabled = false, clear totpSecret and totpPendingSecret
+    userDoc.set('totpEnabled', false);
+    userDoc.set('totpSecret', undefined);
+    userDoc.set('totpPendingSecret', undefined);
+    await userDoc.save();
+
+    return {
+      statusCode: 200,
+      response: {
+        message: 'TOTP has been disabled successfully',
+      },
+    };
+  }
+
+  @Post('/totp/reset', { auth: true })
+  async totpReset(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiTotpSetupResponse | ApiErrorResponse>> {
+    if (!req.user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_NoUserOnRequest,
+          ),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    const { code } = req.body as { code?: unknown };
+
+    // Validate code field is exactly 6 digits
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+      throw new HandleableError(
+        new Error('Code must be exactly 6 digits'),
+        { statusCode: 400 },
+      );
+    }
+
+    const UserModel = this.application.getModel<UserDocument<string, TID>>(
+      BaseModelName.User,
+    );
+    const userDoc = await UserModel.findById(req.user.id);
+    if (!userDoc) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_UserNotFound),
+        ),
+        { statusCode: 404 },
+      );
+    }
+
+    if (!userDoc.totpEnabled) {
+      throw new HandleableError(
+        new Error('TOTP is not currently active'),
+        { statusCode: 409 },
+      );
+    }
+
+    // Decrypt the active secret using the system user's private key
+    const decryptedSecret = this.systemUser
+      .decryptData(Buffer.from(userDoc.totpSecret as string, 'hex'))
+      .toString('utf-8');
+
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
+
+    if (!totpService.verifyCode(decryptedSecret, code)) {
+      throw new HandleableError(
+        new Error('Invalid TOTP code'),
+        { statusCode: 400 },
+      );
+    }
+
+    // Generate a new TOTP secret for the reset flow
+    const newSecret = totpService.generateSecret();
+
+    // Encrypt the new secret with the system user's ECIES public key
+    const encryptedSecret = this.systemUser.encryptData(
+      Buffer.from(newSecret, 'utf-8'),
+      this.systemUser.publicKey,
+    );
+
+    // Store encrypted secret as totpPendingSecret (existing totpSecret and totpEnabled remain unchanged)
+    userDoc.set('totpPendingSecret', encryptedSecret.toString('hex'));
+    await userDoc.save();
+
+    const provisioningUri = totpService.generateProvisioningUri(
+      newSecret,
+      userDoc.email,
+      this.application.environment.host,
+    );
+
+    return {
+      statusCode: 200,
+      response: {
+        provisioningUri,
+        secret: newSecret,
+        message: 'TOTP reset initiated. Please confirm with the new code.',
+      },
+    };
+  }
+
+  @Post('/totp/verify', { auth: false })
+  async totpVerify(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiLoginResponse | ApiErrorResponse>> {
+    // Manually extract and verify the pending TOTP token from the Authorization header.
+    // This endpoint does NOT use the standard auth middleware because the pending token
+    // lacks `roles` and would be rejected by `verifyToken`.
+    const token = findAuthToken(req.headers);
+    if (!token) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_InvalidToken),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    let decoded: JwtPayload;
+    try {
+      decoded = jwtVerify(
+        token,
+        this.application.environment.jwtSecret,
+        { algorithms: [this.application.constants.JWT.ALGORITHM] },
+      ) as JwtPayload;
+    } catch (err) {
+      if (err instanceof JwtTokenExpiredError) {
+        throw new HandleableError(
+          new Error(
+            getSuiteCoreTranslation(SuiteCoreStringKey.Validation_TokenExpired),
+          ),
+          { statusCode: 401 },
+        );
+      }
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_InvalidToken),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    // Validate that this is a pending TOTP token
+    if (!decoded || decoded['pendingTotp'] !== true || !decoded['userId']) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_InvalidToken),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    const userId = decoded['userId'] as string;
+
+    const { code } = req.body as { code?: unknown };
+
+    // Validate code field is exactly 6 digits
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+      throw new HandleableError(
+        new Error('Code must be exactly 6 digits'),
+        { statusCode: 400 },
+      );
+    }
+
+    const UserModel = this.application.getModel<UserDocument<string, TID>>(
+      BaseModelName.User,
+    );
+    const userDoc = await UserModel.findById(userId);
+    if (!userDoc) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_UserNotFound),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    if (!userDoc.totpEnabled || !userDoc.totpSecret) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Validation_InvalidToken),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    // Decrypt the TOTP secret using the system user's private key
+    const decryptedSecret = this.systemUser
+      .decryptData(Buffer.from(userDoc.totpSecret, 'hex'))
+      .toString('utf-8');
+
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
+
+    if (!totpService.verifyCode(decryptedSecret, code)) {
+      throw new HandleableError(
+        new Error('Invalid TOTP code'),
+        { statusCode: 400 },
+      );
+    }
+
+    // Issue a full JWT token
+    const { token: jwtToken, roles } = await this.jwtService.signToken(
+      userDoc,
+      this.application.environment.jwtSecret,
+      (userDoc.siteLanguage as string) ?? LanguageCodes.EN_US,
+    );
+
+    return {
+      statusCode: 200,
+      response: {
+        user: RequestUserService.makeRequestUserDTO(userDoc, roles),
+        token: jwtToken,
+        serverPublicKey:
+          this.application.environment.systemPublicKeyHex ?? '',
+        message: getSuiteCoreTranslation(
+          SuiteCoreStringKey.LoggedIn_Success,
+        ),
       },
     };
   }
@@ -1280,6 +1723,20 @@ export class UserController<
           sess,
         );
 
+        if (userDoc.totpEnabled) {
+          const pendingTotpToken = this.jwtService.signPendingTotpToken(
+            userDoc._id.toString(),
+            this.application.environment.jwtSecret,
+          );
+          return {
+            statusCode: 200,
+            response: {
+              pendingTotpToken,
+              message: 'TOTP verification required',
+            },
+          };
+        }
+
         const { token: jwtToken, roles } = await this.jwtService.signToken(
           userDoc,
           this.application.environment.jwtSecret,
@@ -1458,6 +1915,20 @@ export class UserController<
           String(signature),
           sess,
         );
+
+        if (userDoc.totpEnabled) {
+          const pendingTotpToken = this.jwtService.signPendingTotpToken(
+            userDoc._id.toString(),
+            this.application.environment.jwtSecret,
+          );
+          return {
+            statusCode: 200,
+            response: {
+              pendingTotpToken,
+              message: 'TOTP verification required',
+            },
+          };
+        }
 
         const { token: jwtToken, roles } = await this.jwtService.signToken(
           userDoc,
@@ -1665,16 +2136,30 @@ export class UserController<
           );
         }
 
+        if (!updatedUserDoc) {
+          throw new Error('User document not found after backup code recovery');
+        }
+        this.userService.updateLastLogin(updatedUserDoc._id).catch(() => {});
+
+        if (userDoc.totpEnabled) {
+          const pendingTotpToken = this.jwtService.signPendingTotpToken(
+            userDoc._id.toString(),
+            this.application.environment.jwtSecret,
+          );
+          return {
+            statusCode: 200,
+            response: {
+              pendingTotpToken,
+              message: 'TOTP verification required',
+            },
+          };
+        }
+
         const { token, roles } = await this.jwtService.signToken(
           userDoc,
           this.application.environment.jwtSecret,
           LanguageCodes.EN_US,
         );
-
-        if (!updatedUserDoc) {
-          throw new Error('User document not found after backup code recovery');
-        }
-        this.userService.updateLastLogin(updatedUserDoc._id).catch(() => {});
 
         return {
           statusCode: 200,

@@ -67,4 +67,25 @@ export class JwtService<
       roleDTOs: tokenRoleDTOs,
     };
   }
+
+  /**
+   * Sign a pending TOTP token for users who have TOTP enabled.
+   * This token contains only the userId and a pendingTotp flag — no roles or privilege claims.
+   * It is valid for 10 minutes (600 seconds) and must be exchanged for a full JWT
+   * after successful TOTP code verification.
+   * @param userId - The user's ID string
+   * @param jwtSecret - The JWT signing secret
+   * @returns A signed JWT string with pendingTotp: true
+   */
+  public signPendingTotpToken(userId: string, jwtSecret: string): string {
+    return sign(
+      { userId, pendingTotp: true },
+      jwtSecret,
+      {
+        algorithm: this.application.constants.JWT.ALGORITHM,
+        allowInsecureKeySizes: false,
+        expiresIn: 600, // 10 minutes
+      },
+    );
+  }
 }

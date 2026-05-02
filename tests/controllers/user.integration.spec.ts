@@ -185,7 +185,7 @@ describe('UserController', () => {
       expect(hasRefreshToken).toBe(true);
     });
 
-    it('should have POST /account-verification route', () => {
+    it('should have POST /verify-email route', () => {
       const routes = controller.router.stack
         .filter((layer: any) => layer.route)
         .map((layer: any) => ({
@@ -193,11 +193,11 @@ describe('UserController', () => {
           methods: Object.keys(layer.route.methods),
         }));
 
-      const hasAccountVerification = routes.some(
+      const hasVerifyEmail = routes.some(
         (r: any) =>
-          r.path === '/account-verification' && r.methods.includes('post'),
+          r.path === '/verify-email' && r.methods.includes('post'),
       );
-      expect(hasAccountVerification).toBe(true);
+      expect(hasVerifyEmail).toBe(true);
     });
 
     it('should have GET /verify route', () => {

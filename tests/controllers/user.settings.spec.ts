@@ -181,6 +181,7 @@ describe('UserController - GET /settings', () => {
         siteLanguage: 'en-US',
         darkMode: true,
         directChallenge: false,
+        totpEnabled: false,
       });
     });
 
@@ -218,6 +219,7 @@ describe('UserController - GET /settings', () => {
         siteLanguage: '',
         darkMode: false,
         directChallenge: false,
+        totpEnabled: false,
       });
     });
 
