@@ -19,8 +19,12 @@ jest.mock('@digitaldefiance/node-express-suite', () => {
         publicKey: Buffer.alloc(65, 1),
         privateKey: Buffer.alloc(32, 2),
         address: 'mock-address',
-        encryptData: jest.fn().mockReturnValue(Buffer.from('encrypted-secret', 'utf-8')),
-        decryptData: jest.fn().mockReturnValue(Buffer.from('JBSWY3DPEHPK3PXP', 'utf-8')),
+        encryptData: jest
+          .fn()
+          .mockReturnValue(Buffer.from('encrypted-secret', 'utf-8')),
+        decryptData: jest
+          .fn()
+          .mockReturnValue(Buffer.from('JBSWY3DPEHPK3PXP', 'utf-8')),
       }),
     },
   };
@@ -29,7 +33,11 @@ jest.mock('@digitaldefiance/node-express-suite', () => {
 // Shared mock TotpService returned by application.services.get
 const mockTotpService = {
   generateSecret: jest.fn().mockReturnValue('JBSWY3DPEHPK3PXP'),
-  generateProvisioningUri: jest.fn().mockReturnValue('otpauth://totp/host:test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=host'),
+  generateProvisioningUri: jest
+    .fn()
+    .mockReturnValue(
+      'otpauth://totp/host:test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=host',
+    ),
   verifyCode: jest.fn().mockReturnValue(true),
 };
 
@@ -89,7 +97,9 @@ function createMockApp(userDocOverrides: Record<string, unknown> = {}) {
   };
 }
 
-function createController(mockApp: ReturnType<typeof createMockApp>['mockApp']) {
+function createController(
+  mockApp: ReturnType<typeof createMockApp>['mockApp'],
+) {
   const mockJwtService = {
     sign: jest.fn().mockReturnValue('mock-jwt-token'),
     verify: jest.fn(),
@@ -102,8 +112,12 @@ function createController(mockApp: ReturnType<typeof createMockApp>['mockApp']) 
     signPendingTotpToken: jest.fn().mockReturnValue('pending-totp-token'),
   } as unknown as jest.Mocked<JwtService<any, any, any, any, any>>;
 
-  const mockUserService = {} as jest.Mocked<UserService<any, any, any, any, any, any, any, any, any, any, any>>;
-  const mockBackupCodeService = {} as jest.Mocked<BackupCodeService<any, any, any, any>>;
+  const mockUserService = {} as jest.Mocked<
+    UserService<any, any, any, any, any, any, any, any, any, any, any>
+  >;
+  const mockBackupCodeService = {} as jest.Mocked<
+    BackupCodeService<any, any, any, any>
+  >;
   const mockRoleService = {
     getUserRoles: jest.fn().mockResolvedValue([]),
     rolesToTokenRoles: jest.fn().mockReturnValue([]),
@@ -142,28 +156,26 @@ describe('UserController - TOTP Endpoints', () => {
     // Spy on authenticateRequest BEFORE constructing the controller
     authenticateRequestSpy = jest
       .spyOn(UserController.prototype as any, 'authenticateRequest')
-      .mockImplementation(
-        async function (
-          this: any,
-          _route: any,
-          req: Request,
-          _res: Response,
-          next: NextFunction,
-        ) {
-          req.user = {
-            id: mockUserId.toString(),
-            email: 'test@example.com',
-            username: 'testuser',
-            roles: [],
-            timezone: 'UTC',
-            emailVerified: true,
-            darkMode: false,
-            siteLanguage: 'en-US',
-            directChallenge: false,
-          };
-          next();
-        },
-      );
+      .mockImplementation(async function (
+        this: any,
+        _route: any,
+        req: Request,
+        _res: Response,
+        next: NextFunction,
+      ) {
+        req.user = {
+          id: mockUserId.toString(),
+          email: 'test@example.com',
+          username: 'testuser',
+          roles: [],
+          timezone: 'UTC',
+          emailVerified: true,
+          darkMode: false,
+          siteLanguage: 'en-US',
+          directChallenge: false,
+        };
+        next();
+      });
 
     process.env.JWT_SECRET = 'a'.repeat(64);
     process.env.MNEMONIC_HMAC_SECRET = 'a'.repeat(64);
@@ -210,7 +222,10 @@ describe('UserController - TOTP Endpoints', () => {
       expect(response.body).toHaveProperty('secret');
       expect(response.body.provisioningUri).toContain('otpauth://totp/');
       expect(typeof response.body.secret).toBe('string');
-      expect(userDoc.set).toHaveBeenCalledWith('totpPendingSecret', expect.any(String));
+      expect(userDoc.set).toHaveBeenCalledWith(
+        'totpPendingSecret',
+        expect.any(String),
+      );
       expect(userDoc.save).toHaveBeenCalled();
     });
 
@@ -228,7 +243,10 @@ describe('UserController - TOTP Endpoints', () => {
         .send({});
 
       expect(response.status).toBe(200);
-      expect(userDoc.set).toHaveBeenCalledWith('totpPendingSecret', expect.any(String));
+      expect(userDoc.set).toHaveBeenCalledWith(
+        'totpPendingSecret',
+        expect.any(String),
+      );
     });
   });
 
@@ -315,7 +333,10 @@ describe('UserController - TOTP Endpoints', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toContain('enabled successfully');
-      expect(userDoc.set).toHaveBeenCalledWith('totpSecret', 'encrypted-pending-secret');
+      expect(userDoc.set).toHaveBeenCalledWith(
+        'totpSecret',
+        'encrypted-pending-secret',
+      );
       expect(userDoc.set).toHaveBeenCalledWith('totpEnabled', true);
       expect(userDoc.set).toHaveBeenCalledWith('totpPendingSecret', undefined);
       expect(userDoc.save).toHaveBeenCalled();
@@ -417,15 +438,14 @@ describe('UserController - TOTP Endpoints', () => {
     // so we need to provide a real signed pending token.
     const jwtSecret = 'a'.repeat(64);
 
-    function signPendingToken(userId: string, options: { expired?: boolean } = {}): string {
-      return sign(
-        { userId, pendingTotp: true },
-        jwtSecret,
-        {
-          algorithm: 'HS256',
-          expiresIn: options.expired ? -10 : 600,
-        },
-      );
+    function signPendingToken(
+      userId: string,
+      options: { expired?: boolean } = {},
+    ): string {
+      return sign({ userId, pendingTotp: true }, jwtSecret, {
+        algorithm: 'HS256',
+        expiresIn: options.expired ? -10 : 600,
+      });
     }
 
     /**
@@ -465,7 +485,9 @@ describe('UserController - TOTP Endpoints', () => {
       const { controller } = createController(mockApp);
       const app = buildExpressApp(controller);
 
-      const expiredToken = signPendingToken(userId.toString(), { expired: true });
+      const expiredToken = signPendingToken(userId.toString(), {
+        expired: true,
+      });
 
       const response = await request(app)
         .post('/api/user/totp/verify')
@@ -499,11 +521,10 @@ describe('UserController - TOTP Endpoints', () => {
       const app = buildExpressApp(controller);
 
       // Sign a token without pendingTotp claim
-      const regularToken = sign(
-        { userId: 'some-id' },
-        jwtSecret,
-        { algorithm: 'HS256', expiresIn: 600 },
-      );
+      const regularToken = sign({ userId: 'some-id' }, jwtSecret, {
+        algorithm: 'HS256',
+        expiresIn: 600,
+      });
 
       const response = await request(app)
         .post('/api/user/totp/verify')
@@ -617,7 +638,10 @@ describe('UserController - TOTP Endpoints', () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toContain('Invalid TOTP code');
       // Ensure no state change
-      expect(userDoc.set).not.toHaveBeenCalledWith('totpPendingSecret', expect.any(String));
+      expect(userDoc.set).not.toHaveBeenCalledWith(
+        'totpPendingSecret',
+        expect.any(String),
+      );
     });
 
     it('should return 400 when code format is invalid', async () => {
@@ -663,7 +687,10 @@ describe('UserController - TOTP Endpoints', () => {
       expect(typeof response.body.secret).toBe('string');
       expect(response.body.message).toContain('reset initiated');
       // totpPendingSecret should be set, but totpEnabled and totpSecret remain unchanged
-      expect(userDoc.set).toHaveBeenCalledWith('totpPendingSecret', expect.any(String));
+      expect(userDoc.set).toHaveBeenCalledWith(
+        'totpPendingSecret',
+        expect.any(String),
+      );
       expect(userDoc.set).not.toHaveBeenCalledWith('totpEnabled', false);
       expect(userDoc.set).not.toHaveBeenCalledWith('totpSecret', undefined);
       expect(userDoc.save).toHaveBeenCalled();

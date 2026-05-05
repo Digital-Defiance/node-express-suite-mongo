@@ -241,10 +241,7 @@ export class ApiRouter<
       );
     }
     if (!app.services.has(ServiceKeys.TOTP)) {
-      app.services.register(
-        ServiceKeys.TOTP,
-        () => new TotpService(),
-      );
+      app.services.register(ServiceKeys.TOTP, () => new TotpService());
     }
   }
 }

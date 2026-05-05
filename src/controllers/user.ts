@@ -70,7 +70,11 @@ import { RoleService } from '../services/role';
 import { UserService } from '../services/user';
 import { withMongoTransaction } from '../utils/mongo-transaction';
 import { getSuiteCoreI18nEngine } from '@digitaldefiance/suite-core-lib';
-import { verify as jwtVerify, JwtPayload, TokenExpiredError as JwtTokenExpiredError } from 'jsonwebtoken';
+import {
+  verify as jwtVerify,
+  JwtPayload,
+  TokenExpiredError as JwtTokenExpiredError,
+} from 'jsonwebtoken';
 
 const isString = (v: unknown): v is string => typeof v === 'string';
 const i18nEngine = getSuiteCoreI18nEngine();
@@ -1039,10 +1043,9 @@ export class UserController<
     }
 
     if (userDoc.totpEnabled) {
-      throw new HandleableError(
-        new Error('TOTP is already active'),
-        { statusCode: 409 },
-      );
+      throw new HandleableError(new Error('TOTP is already active'), {
+        statusCode: 409,
+      });
     }
 
     const totpService = this.application.services.get<TotpService>(
@@ -1087,9 +1090,7 @@ export class UserController<
     if (!req.user) {
       throw new HandleableError(
         new Error(
-          getSuiteCoreTranslation(
-            SuiteCoreStringKey.Common_NoUserOnRequest,
-          ),
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
         ),
         { statusCode: 401 },
       );
@@ -1099,10 +1100,9 @@ export class UserController<
 
     // Validate code field is exactly 6 digits
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      throw new HandleableError(
-        new Error('Code must be exactly 6 digits'),
-        { statusCode: 400 },
-      );
+      throw new HandleableError(new Error('Code must be exactly 6 digits'), {
+        statusCode: 400,
+      });
     }
 
     const UserModel = this.application.getModel<UserDocument<string, TID>>(
@@ -1135,10 +1135,9 @@ export class UserController<
     );
 
     if (!totpService.verifyCode(decryptedSecret, code)) {
-      throw new HandleableError(
-        new Error('Invalid TOTP code'),
-        { statusCode: 400 },
-      );
+      throw new HandleableError(new Error('Invalid TOTP code'), {
+        statusCode: 400,
+      });
     }
 
     // Move encrypted totpPendingSecret → totpSecret, enable TOTP, clear pending
@@ -1164,9 +1163,7 @@ export class UserController<
     if (!req.user) {
       throw new HandleableError(
         new Error(
-          getSuiteCoreTranslation(
-            SuiteCoreStringKey.Common_NoUserOnRequest,
-          ),
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
         ),
         { statusCode: 401 },
       );
@@ -1176,10 +1173,9 @@ export class UserController<
 
     // Validate code field is exactly 6 digits
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      throw new HandleableError(
-        new Error('Code must be exactly 6 digits'),
-        { statusCode: 400 },
-      );
+      throw new HandleableError(new Error('Code must be exactly 6 digits'), {
+        statusCode: 400,
+      });
     }
 
     const UserModel = this.application.getModel<UserDocument<string, TID>>(
@@ -1196,10 +1192,9 @@ export class UserController<
     }
 
     if (!userDoc.totpEnabled) {
-      throw new HandleableError(
-        new Error('TOTP is not currently active'),
-        { statusCode: 409 },
-      );
+      throw new HandleableError(new Error('TOTP is not currently active'), {
+        statusCode: 409,
+      });
     }
 
     // Decrypt the active secret using the system user's private key
@@ -1212,10 +1207,9 @@ export class UserController<
     );
 
     if (!totpService.verifyCode(decryptedSecret, code)) {
-      throw new HandleableError(
-        new Error('Invalid TOTP code'),
-        { statusCode: 400 },
-      );
+      throw new HandleableError(new Error('Invalid TOTP code'), {
+        statusCode: 400,
+      });
     }
 
     // Disable TOTP: set totpEnabled = false, clear totpSecret and totpPendingSecret
@@ -1241,9 +1235,7 @@ export class UserController<
     if (!req.user) {
       throw new HandleableError(
         new Error(
-          getSuiteCoreTranslation(
-            SuiteCoreStringKey.Common_NoUserOnRequest,
-          ),
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
         ),
         { statusCode: 401 },
       );
@@ -1253,10 +1245,9 @@ export class UserController<
 
     // Validate code field is exactly 6 digits
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      throw new HandleableError(
-        new Error('Code must be exactly 6 digits'),
-        { statusCode: 400 },
-      );
+      throw new HandleableError(new Error('Code must be exactly 6 digits'), {
+        statusCode: 400,
+      });
     }
 
     const UserModel = this.application.getModel<UserDocument<string, TID>>(
@@ -1273,10 +1264,9 @@ export class UserController<
     }
 
     if (!userDoc.totpEnabled) {
-      throw new HandleableError(
-        new Error('TOTP is not currently active'),
-        { statusCode: 409 },
-      );
+      throw new HandleableError(new Error('TOTP is not currently active'), {
+        statusCode: 409,
+      });
     }
 
     // Decrypt the active secret using the system user's private key
@@ -1289,10 +1279,9 @@ export class UserController<
     );
 
     if (!totpService.verifyCode(decryptedSecret, code)) {
-      throw new HandleableError(
-        new Error('Invalid TOTP code'),
-        { statusCode: 400 },
-      );
+      throw new HandleableError(new Error('Invalid TOTP code'), {
+        statusCode: 400,
+      });
     }
 
     // Generate a new TOTP secret for the reset flow
@@ -1345,11 +1334,9 @@ export class UserController<
 
     let decoded: JwtPayload;
     try {
-      decoded = jwtVerify(
-        token,
-        this.application.environment.jwtSecret,
-        { algorithms: [this.application.constants.JWT.ALGORITHM] },
-      ) as JwtPayload;
+      decoded = jwtVerify(token, this.application.environment.jwtSecret, {
+        algorithms: [this.application.constants.JWT.ALGORITHM],
+      }) as JwtPayload;
     } catch (err) {
       if (err instanceof JwtTokenExpiredError) {
         throw new HandleableError(
@@ -1383,10 +1370,9 @@ export class UserController<
 
     // Validate code field is exactly 6 digits
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      throw new HandleableError(
-        new Error('Code must be exactly 6 digits'),
-        { statusCode: 400 },
-      );
+      throw new HandleableError(new Error('Code must be exactly 6 digits'), {
+        statusCode: 400,
+      });
     }
 
     const UserModel = this.application.getModel<UserDocument<string, TID>>(
@@ -1421,10 +1407,9 @@ export class UserController<
     );
 
     if (!totpService.verifyCode(decryptedSecret, code)) {
-      throw new HandleableError(
-        new Error('Invalid TOTP code'),
-        { statusCode: 400 },
-      );
+      throw new HandleableError(new Error('Invalid TOTP code'), {
+        statusCode: 400,
+      });
     }
 
     // Issue a full JWT token
@@ -1439,11 +1424,8 @@ export class UserController<
       response: {
         user: RequestUserService.makeRequestUserDTO(userDoc, roles),
         token: jwtToken,
-        serverPublicKey:
-          this.application.environment.systemPublicKeyHex ?? '',
-        message: getSuiteCoreTranslation(
-          SuiteCoreStringKey.LoggedIn_Success,
-        ),
+        serverPublicKey: this.application.environment.systemPublicKeyHex ?? '',
+        message: getSuiteCoreTranslation(SuiteCoreStringKey.LoggedIn_Success),
       },
     };
   }

@@ -54,9 +54,7 @@ describe('User Schema - TOTP fields', () => {
   }, 30000);
 
   afterAll(async () => {
-    await mongoose.connection
-      .dropCollection('totpschematests')
-      .catch(() => {});
+    await mongoose.connection.dropCollection('totpschematests').catch(() => {});
     await disconnectMemoryDB();
   }, 30000);
 
@@ -244,10 +242,7 @@ describe('JwtService - signPendingTotpToken unit tests', () => {
     });
 
     it('should not contain roles or privilege claims', () => {
-      const token = jwtService.signPendingTotpToken(
-        'someUserId',
-        testSecret,
-      );
+      const token = jwtService.signPendingTotpToken('someUserId', testSecret);
 
       const payload = decode(token) as Record<string, unknown>;
 
@@ -265,10 +260,7 @@ describe('JwtService - signPendingTotpToken unit tests', () => {
    */
   describe('pending token expiry', () => {
     it('should have an expiry of exactly 600 seconds', () => {
-      const token = jwtService.signPendingTotpToken(
-        'testUserId',
-        testSecret,
-      );
+      const token = jwtService.signPendingTotpToken('testUserId', testSecret);
 
       const payload = decode(token) as Record<string, unknown>;
       const iat = payload['iat'] as number;
@@ -296,10 +288,7 @@ describe('JwtService - signPendingTotpToken unit tests', () => {
     });
 
     it('should fail verification with a different secret', () => {
-      const token = jwtService.signPendingTotpToken(
-        'testUserId',
-        testSecret,
-      );
+      const token = jwtService.signPendingTotpToken('testUserId', testSecret);
 
       expect(() =>
         verify(token, 'wrong-secret', {

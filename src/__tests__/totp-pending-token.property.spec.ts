@@ -14,7 +14,10 @@ import * as fc from 'fast-check';
 import { decode } from 'jsonwebtoken';
 import { LocalhostConstants } from '@digitaldefiance/node-express-suite';
 import { JwtService } from '../services/jwt';
-import { IApplication, IEnvironment } from '@digitaldefiance/node-express-suite';
+import {
+  IApplication,
+  IEnvironment,
+} from '@digitaldefiance/node-express-suite';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

@@ -284,7 +284,10 @@ export function createUserSchema<T extends IConstants = IConstants>(
   schema.pre('validate', function (next) {
     if (this.get('totpEnabled') === true) {
       const totpSecret = this.get('totpSecret');
-      if (!totpSecret || (typeof totpSecret === 'string' && totpSecret.trim() === '')) {
+      if (
+        !totpSecret ||
+        (typeof totpSecret === 'string' && totpSecret.trim() === '')
+      ) {
         this.invalidate(
           'totpSecret',
           'totpSecret is required when totpEnabled is true',

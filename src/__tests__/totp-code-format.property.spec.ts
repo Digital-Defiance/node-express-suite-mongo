@@ -150,9 +150,7 @@ describe('TOTP Code Format Validation - Property Tests', () => {
             expect(err).toBeInstanceOf(HandleableError);
             const handleableErr = err as HandleableError;
             expect(handleableErr.statusCode).toBe(400);
-            expect(handleableErr.message).toBe(
-              'Code must be exactly 6 digits',
-            );
+            expect(handleableErr.message).toBe('Code must be exactly 6 digits');
           }
         }),
         { numRuns: 100 },
@@ -206,9 +204,7 @@ describe('TOTP Code Format Validation - Property Tests', () => {
           } catch (err) {
             const handleableErr = err as HandleableError;
             expect(handleableErr.statusCode).toBe(400);
-            expect(handleableErr.message).toBe(
-              'Code must be exactly 6 digits',
-            );
+            expect(handleableErr.message).toBe('Code must be exactly 6 digits');
           }
         }),
         { numRuns: 100 },

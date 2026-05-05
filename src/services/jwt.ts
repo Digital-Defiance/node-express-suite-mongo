@@ -78,14 +78,10 @@ export class JwtService<
    * @returns A signed JWT string with pendingTotp: true
    */
   public signPendingTotpToken(userId: string, jwtSecret: string): string {
-    return sign(
-      { userId, pendingTotp: true },
-      jwtSecret,
-      {
-        algorithm: this.application.constants.JWT.ALGORITHM,
-        allowInsecureKeySizes: false,
-        expiresIn: 600, // 10 minutes
-      },
-    );
+    return sign({ userId, pendingTotp: true }, jwtSecret, {
+      algorithm: this.application.constants.JWT.ALGORITHM,
+      allowInsecureKeySizes: false,
+      expiresIn: 600, // 10 minutes
+    });
   }
 }
