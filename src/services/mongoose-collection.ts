@@ -367,7 +367,7 @@ export class MongooseCollection<
 
   // ── Change streams ──
 
-  watch(listener: ChangeListener<T>): () => void {
+  watch(listener: ChangeListener<T, Date>): () => void {
     const changeStream = this._model.watch();
     changeStream.on('change', (change: Record<string, unknown>) => {
       listener({
