@@ -140,12 +140,19 @@ For simpler imports, this package re-exports key symbols from the base package:
 
 ## Migration from Pre-Split Versions
 
-If upgrading from `@digitaldefiance/node-express-suite` < 5.0 (before the split):
+If upgrading from `@digitaldefiance/node-express-suite` < 4.23.0 (before the split):
 
 1. Install this package alongside the base package
 2. Update imports: move Mongo-specific symbols to `@digitaldefiance/node-express-suite-mongo`
 3. Symbols that stay in the base package: `Application`, `BaseController`, `BaseService`, `Environment`, `AppRouter`, `BaseRouter`, decorators, middleware, utilities, i18n, validation, responses, builders
 4. Symbols that move here: documents, schemas, models, `MongoDatabasePlugin`, `DatabaseInitializationService`, `UserService`, `RoleService`, `BackupCodeService`, `UserController`, `ModelRegistry`, `TransactionManager`, `ApiRouter`, all Mongoose-specific interfaces/types/errors
+
+## ChangeLog
+
+### Version 5.0.0
+
+- Version sync for Express Suite 5.0.0; no breaking changes in this package
+- Peer dependencies now require `@digitaldefiance/node-express-suite` and `@digitaldefiance/suite-core-lib` `^5.0.0`
 
 ## License
 
