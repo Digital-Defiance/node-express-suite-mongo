@@ -149,6 +149,10 @@ If upgrading from `@digitaldefiance/node-express-suite` < 4.23.0 (before the spl
 
 ## ChangeLog
 
+### Version 5.0.1
+
+- Fixed user registration rejecting the server-generated-mnemonic flow. The `RegisterSchema` required a `password` or `mnemonic`, but `UserService.newUser` generates a mnemonic server-side when neither is supplied (and the express-validator chain already treats both as optional). Registration with only `username`/`email`/`timezone`/`displayName` now succeeds and returns the generated mnemonic.
+
 ### Version 5.0.0
 
 - Version sync for Express Suite 5.0.0; no breaking changes in this package

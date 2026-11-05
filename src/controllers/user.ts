@@ -79,62 +79,59 @@ import {
 const isString = (v: unknown): v is string => typeof v === 'string';
 const i18nEngine = getSuiteCoreI18nEngine();
 
-const RegisterSchema = z
-  .object({
-    username: z.string({
-      required_error: i18nEngine.translateStringKey(
-        SuiteCoreStringKey.Validation_Required,
-      ),
-    }),
-    email: z.string({
-      required_error: i18nEngine.translateStringKey(
-        SuiteCoreStringKey.Validation_Required,
-      ),
-    }),
-    timezone: z.string({
-      required_error: i18nEngine.translateStringKey(
-        SuiteCoreStringKey.Validation_Required,
-      ),
-    }),
-    password: z
-      .string()
-      .min(
-        8,
-        i18nEngine.translateStringKey(
-          SuiteCoreStringKey.Validation_PasswordMinLengthTemplate,
-        ),
-      )
-      .optional(),
-    mnemonic: z
-      .string()
-      .min(
-        1,
-        i18nEngine.translateStringKey(
-          SuiteCoreStringKey.Validation_MnemonicRegex,
-        ),
-      )
-      .optional(),
-    ...(Constants.EnableDisplayName
-      ? {
-          displayName: z
-            .string()
-            .min(Constants.DisplayNameMinLength)
-            .max(Constants.DisplayNameMaxLength)
-            .regex(
-              Constants.DisplayNameRegex,
-              i18nEngine.translateStringKey(
-                SuiteCoreStringKey.Validation_DisplayNameRegexErrorTemplate,
-              ),
-            ),
-        }
-      : {}),
-  })
-  .refine((data) => data.password || data.mnemonic, {
-    message: i18nEngine.translateStringKey(
-      SuiteCoreStringKey.Validation_MnemonicOrPasswordRequired,
+const RegisterSchema = z.object({
+  username: z.string({
+    required_error: i18nEngine.translateStringKey(
+      SuiteCoreStringKey.Validation_Required,
     ),
-    path: ['password'],
-  });
+  }),
+  email: z.string({
+    required_error: i18nEngine.translateStringKey(
+      SuiteCoreStringKey.Validation_Required,
+    ),
+  }),
+  timezone: z.string({
+    required_error: i18nEngine.translateStringKey(
+      SuiteCoreStringKey.Validation_Required,
+    ),
+  }),
+  password: z
+    .string()
+    .min(
+      8,
+      i18nEngine.translateStringKey(
+        SuiteCoreStringKey.Validation_PasswordMinLengthTemplate,
+      ),
+    )
+    .optional(),
+  mnemonic: z
+    .string()
+    .min(
+      1,
+      i18nEngine.translateStringKey(
+        SuiteCoreStringKey.Validation_MnemonicRegex,
+      ),
+    )
+    .optional(),
+  ...(Constants.EnableDisplayName
+    ? {
+        displayName: z
+          .string()
+          .min(Constants.DisplayNameMinLength)
+          .max(Constants.DisplayNameMaxLength)
+          .regex(
+            Constants.DisplayNameRegex,
+            i18nEngine.translateStringKey(
+              SuiteCoreStringKey.Validation_DisplayNameRegexErrorTemplate,
+            ),
+          ),
+      }
+    : {}),
+});
+// password and mnemonic are both optional: when neither is supplied the
+// service generates a mnemonic server-side (UserService.newUser server-
+// generated mnemonic path), and the express-validator chain already treats
+// both as optional, so registration must not require one of them.
 
 const EmailLoginChallengeSchema = z.object({
   token: z.string({

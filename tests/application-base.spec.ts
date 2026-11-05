@@ -1,4 +1,7 @@
 import '@digitaldefiance/express-suite-test-utils';
+import { mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import {
   connectMemoryDB,
   disconnectMemoryDB,
@@ -9,6 +12,11 @@ import { TranslatableSuiteError } from '@digitaldefiance/suite-core-lib';
 import { BaseApplication, Environment } from '@digitaldefiance/node-express-suite';
 import { IDocumentStore } from '../src/interfaces/mongoose-document-store';
 import { MongooseDocumentStore } from '../src/services/mongoose-document-store';
+
+// Unique per-file temp dirs so parallel jest workers don't race on a shared
+// hardcoded path that another suite can create/remove mid-run.
+const API_DIST_DIR = mkdtempSync(join(tmpdir(), 'nesm-api-dist-'));
+const REACT_DIST_DIR = mkdtempSync(join(tmpdir(), 'nesm-react-dist-'));
 
 describe('BaseApplication', () => {
   /**
@@ -120,16 +128,11 @@ describe('BaseApplication', () => {
   let env: Environment;
 
   beforeEach(() => {
-    const fs = require('fs');
     process.env.JWT_SECRET = 'a'.repeat(64);
     process.env.MNEMONIC_HMAC_SECRET = 'a'.repeat(64);
     process.env.MNEMONIC_ENCRYPTION_KEY = 'b'.repeat(64);
-    process.env.API_DIST_DIR = '/tmp/test-api-dist';
-    process.env.REACT_DIST_DIR = '/tmp/test-react-dist';
-    if (!fs.existsSync('/tmp/test-api-dist'))
-      fs.mkdirSync('/tmp/test-api-dist', { recursive: true });
-    if (!fs.existsSync('/tmp/test-react-dist'))
-      fs.mkdirSync('/tmp/test-react-dist', { recursive: true });
+    process.env.API_DIST_DIR = API_DIST_DIR;
+    process.env.REACT_DIST_DIR = REACT_DIST_DIR;
     env = new Environment(undefined, true);
     app = new TestApplication(env);
   });

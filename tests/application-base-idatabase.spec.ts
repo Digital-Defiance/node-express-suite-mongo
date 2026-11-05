@@ -31,6 +31,14 @@ import { BaseApplication, Environment, withTransaction } from '@digitaldefiance/
 import { MongooseDocumentStore } from '../src/services/mongoose-document-store';
 import mongoose from '@digitaldefiance/mongoose-types';
 import { TranslatableSuiteError } from '@digitaldefiance/suite-core-lib';
+import { mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+
+// Unique per-file temp dirs so parallel jest workers don't race on a shared
+// hardcoded path that another suite can create/remove mid-run.
+const API_DIST_DIR = mkdtempSync(join(tmpdir(), 'nesm-api-dist-'));
+const REACT_DIST_DIR = mkdtempSync(join(tmpdir(), 'nesm-react-dist-'));
 
 // ---------------------------------------------------------------------------
 // Mock IClientSession
@@ -266,16 +274,11 @@ function createMockDatabase(): IDatabase & { callLog: DatabaseCallLog } {
 // ---------------------------------------------------------------------------
 
 function setupTestEnv(): void {
-  const fs = require('fs');
   process.env.JWT_SECRET = 'a'.repeat(64);
   process.env.MNEMONIC_HMAC_SECRET = 'a'.repeat(64);
   process.env.MNEMONIC_ENCRYPTION_KEY = 'b'.repeat(64);
-  process.env.API_DIST_DIR = '/tmp/test-api-dist';
-  process.env.REACT_DIST_DIR = '/tmp/test-react-dist';
-  if (!fs.existsSync('/tmp/test-api-dist'))
-    fs.mkdirSync('/tmp/test-api-dist', { recursive: true });
-  if (!fs.existsSync('/tmp/test-react-dist'))
-    fs.mkdirSync('/tmp/test-react-dist', { recursive: true });
+  process.env.API_DIST_DIR = API_DIST_DIR;
+  process.env.REACT_DIST_DIR = REACT_DIST_DIR;
 }
 
 // ---------------------------------------------------------------------------
