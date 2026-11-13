@@ -148,6 +148,10 @@ If upgrading from `@digitaldefiance/node-express-suite` < 4.23.0 (before the spl
 4. Symbols that move here: documents, schemas, models, `MongoDatabasePlugin`, `DatabaseInitializationService`, `UserService`, `RoleService`, `BackupCodeService`, `UserController`, `ModelRegistry`, `TransactionManager`, `ApiRouter`, all Mongoose-specific interfaces/types/errors
 
 ## ChangeLog
+### Version 5.1.0
+- Fixed: `MongoBaseController`'s IDatabase fallback passes the adapter's session to the callback; Mongo services unwrap it to the native session mongoose needs, so writes join the transaction
+- Fixed: `UserController` handlers read `validatedBody` before entering a transaction
+- Peer dependencies now require `@digitaldefiance/node-express-suite` ^5.1.0, `@digitaldefiance/i18n-lib` ^4.8.0, `@digitaldefiance/suite-core-lib` ^5.0.1, `@digitaldefiance/ecies-lib` ^5.2.3, `@digitaldefiance/node-ecies-lib` ^5.2.3
 
 ### Version 5.0.1
 
