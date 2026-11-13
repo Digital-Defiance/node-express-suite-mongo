@@ -6,7 +6,14 @@
  */
 
 import { IMongoApplication } from '../interfaces/mongo-application';
-import { BaseService } from '@digitaldefiance/node-express-suite';
+import {
+  BaseService,
+  type TransactionCallback,
+} from '@digitaldefiance/node-express-suite';
+import {
+  unwrapNativeSession,
+  withNativeSession,
+} from './mongoose-session-adapter';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 
 /**
@@ -26,5 +33,24 @@ export class MongoBaseService<
 > extends BaseService<TID, TApplication> {
   constructor(application: TApplication) {
     super(application);
+  }
+
+  /**
+   * Same session rules as BaseService.withTransaction, but callbacks (and a
+   * caller-supplied session) are unwrapped to the native mongodb session that
+   * mongoose operations require.
+   */
+  public override async withTransaction<TResult>(
+    callback: TransactionCallback<TResult>,
+    session?: unknown,
+    options?: { timeoutMs?: number },
+    ...args: unknown[]
+  ): Promise<TResult> {
+    return await super.withTransaction(
+      withNativeSession(callback),
+      unwrapNativeSession(session),
+      options,
+      ...args,
+    );
   }
 }

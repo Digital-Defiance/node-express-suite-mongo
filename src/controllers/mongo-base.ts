@@ -153,11 +153,17 @@ export abstract class MongoBaseController<
       );
     }
 
-    // IDatabase path — delegate to IDatabase.withTransaction
+    // IDatabase path. Same session rules as BaseController.withTransaction:
+    // reuse a session already in play, otherwise open a transaction and hand
+    // the adapter's session to the callback.
     const db = this.application.database;
     if (db) {
-      return await db.withTransaction(async () => {
-        return await callback(session, ...args);
+      const existingSession = session ?? this.session;
+      if (existingSession !== undefined) {
+        return await callback(existingSession, ...args);
+      }
+      return await db.withTransaction(async (adapterSession) => {
+        return await callback(adapterSession, ...args);
       });
     }
 

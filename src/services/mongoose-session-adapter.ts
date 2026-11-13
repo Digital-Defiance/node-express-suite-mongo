@@ -6,6 +6,7 @@
  */
 
 import type { IClientSession } from '@digitaldefiance/suite-core-lib';
+import type { TransactionCallback } from '@digitaldefiance/node-express-suite';
 import type { ClientSession } from 'mongodb';
 
 /**
@@ -67,4 +68,28 @@ export class MongooseSessionAdapter implements IClientSession {
     // Fire and forget — the session cleanup is best-effort.
     void this._session.endSession();
   }
+}
+
+/**
+ * Returns the native mongodb ClientSession when given a MongooseSessionAdapter;
+ * any other value (a native session, undefined) is returned unchanged.
+ *
+ * Mongo services pass sessions straight to mongoose operations
+ * (`.session(s)`, `{ session: s }`), which need the native session. The
+ * IDatabase adapter hands out the wrapper, so unwrap at the Mongo boundary.
+ */
+export function unwrapNativeSession(session: unknown): unknown {
+  return session instanceof MongooseSessionAdapter
+    ? session.nativeSession
+    : session;
+}
+
+/**
+ * Wraps a transaction callback so it receives the native session even when the
+ * transaction was opened through the IDatabase adapter.
+ */
+export function withNativeSession<T>(
+  callback: TransactionCallback<T>,
+): TransactionCallback<T> {
+  return (session, ...args) => callback(unwrapNativeSession(session), ...args);
 }

@@ -69,12 +69,17 @@ import {
   BackupCode,
   Environment,
   BaseService,
+  type TransactionCallback,
   KeyWrappingService,
   SystemUserService,
   InvalidNewPasswordError,
   debugLog,
   InvalidDisplayNameError,
 } from '@digitaldefiance/node-express-suite';
+import {
+  unwrapNativeSession,
+  withNativeSession,
+} from './mongoose-session-adapter';
 import { ModelRegistry } from '../model-registry';
 import { MnemonicService } from './mnemonic';
 import { RequestUserService } from './request-user';
@@ -145,6 +150,25 @@ export class UserService<
   >;
   protected readonly serverUrl: string;
   protected readonly disableEmailSend: boolean;
+
+  /**
+   * Same session rules as BaseService.withTransaction, but callbacks (and a
+   * caller-supplied session) are unwrapped to the native mongodb session that
+   * mongoose operations require.
+   */
+  public override async withTransaction<TResult>(
+    callback: TransactionCallback<TResult>,
+    session?: unknown,
+    options?: { timeoutMs?: number },
+    ...args: unknown[]
+  ): Promise<TResult> {
+    return await super.withTransaction(
+      withNativeSession(callback),
+      unwrapNativeSession(session),
+      options,
+      ...args,
+    );
+  }
 
   constructor(
     application: TApplication,

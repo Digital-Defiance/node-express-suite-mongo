@@ -621,12 +621,14 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiRequestUserResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
       undefined,
       async (sess) => {
-        const { language } = this.validatedBody as { language?: unknown };
+        const { language } = validatedBody as { language?: unknown };
         if (!req.user) {
           throw new HandleableError(
             new Error(
@@ -678,12 +680,14 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiRequestUserResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
       undefined,
       async (sess) => {
-        const { darkMode } = this.validatedBody as { darkMode?: unknown };
+        const { darkMode } = validatedBody as { darkMode?: unknown };
         if (!req.user) {
           throw new HandleableError(
             new Error(
@@ -847,6 +851,8 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiRequestUserResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
@@ -860,7 +866,7 @@ export class UserController<
           darkMode,
           directChallenge,
           displayName,
-        } = this.validatedBody;
+        } = validatedBody;
         if (!req.user) {
           throw new HandleableError(
             new Error(
@@ -1544,12 +1550,14 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
       undefined,
       async (sess) => {
-        const { currentPassword, newPassword } = this.validatedBody as {
+        const { currentPassword, newPassword } = validatedBody as {
           currentPassword?: unknown;
           newPassword?: unknown;
         };
@@ -1879,12 +1887,14 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiLoginResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
       undefined,
       async (sess) => {
-        const { token, signature } = this.validatedBody as {
+        const { token, signature } = validatedBody as {
           token?: unknown;
           signature?: unknown;
         };
@@ -1961,12 +1971,14 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
       undefined,
       async (sess) => {
-        const { username, email } = this.validatedBody as {
+        const { username, email } = validatedBody as {
           username?: unknown;
           email?: unknown;
         };
@@ -2061,12 +2073,14 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiLoginResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
       undefined,
       async (sess) => {
-        const { code, newPassword, email, username } = this.validatedBody as {
+        const { code, newPassword, email, username } = validatedBody as {
           code?: unknown;
           newPassword?: unknown;
           email?: unknown;
@@ -2082,8 +2096,8 @@ export class UserController<
         }
 
         const recoverMnemonic =
-          this.validatedBody?.['recoverMnemonic'] === 'true' ||
-          this.validatedBody?.['recoverMnemonic'] === true;
+          validatedBody?.['recoverMnemonic'] === 'true' ||
+          validatedBody?.['recoverMnemonic'] === true;
 
         const userDoc = await this.userService.findUser(
           email as string,
@@ -2180,12 +2194,14 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
       undefined,
       async (sess) => {
-        const { email } = this.validatedBody as { email?: unknown };
+        const { email } = validatedBody as { email?: unknown };
 
         const UserModel = this.application.getModel<UserDocument<string, TID>>(
           BaseModelName.User,
@@ -2337,13 +2353,15 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    // Capture request state once, before any await.
+    const validatedBody = this.validatedBody;
     return await withMongoTransaction(
       this.application.db.connection,
       this.application.environment.mongo.useTransactions,
       undefined,
       async (sess) => {
         const { token, newPassword, password, currentPassword, mnemonic } =
-          this.validatedBody;
+          validatedBody;
         const selectedNewPassword = (newPassword ?? password) as
           | string
           | undefined;

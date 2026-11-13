@@ -31,10 +31,15 @@ import {
   BackupCode,
   LocalhostConstants as AppConstants,
   BaseService,
+  type TransactionCallback,
   KeyWrappingService,
   SymmetricService,
   SystemUserService,
 } from '@digitaldefiance/node-express-suite';
+import {
+  unwrapNativeSession,
+  withNativeSession,
+} from './mongoose-session-adapter';
 import type {
   IApplication,
   IBackupCodeStore,
@@ -81,6 +86,25 @@ export class BackupCodeService<
    *   UserDocument manipulation (Mongoose). Provide an IBackupCodeStore implementation
    *   for non-Mongoose backends (e.g. BrightDB).
    */
+  /**
+   * Same session rules as BaseService.withTransaction, but callbacks (and a
+   * caller-supplied session) are unwrapped to the native mongodb session that
+   * mongoose operations require.
+   */
+  public override async withTransaction<TResult>(
+    callback: TransactionCallback<TResult>,
+    session?: unknown,
+    options?: { timeoutMs?: number },
+    ...args: unknown[]
+  ): Promise<TResult> {
+    return await super.withTransaction(
+      withNativeSession(callback),
+      unwrapNativeSession(session),
+      options,
+      ...args,
+    );
+  }
+
   constructor(
     application: TApplication,
     eciesService: ECIESService<TID>,
