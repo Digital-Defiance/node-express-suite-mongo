@@ -41,7 +41,7 @@ import {
   withNativeSession,
 } from './mongoose-session-adapter';
 import type {
-  Environment,
+  IEnvironment,
   IApplication,
   IBackupCodeStore,
   IBackupCodeUserRecord,
@@ -120,15 +120,9 @@ export class BackupCodeService<
     this.store = store;
   }
 
-  /**
-   * The application's environment as the `Environment` class.
-   * `IApplication.environment` is typed as the `IEnvironment` interface, but
-   * `SystemUserService` and the Mongo transaction settings need the class
-   * (its `mongo` getter and the mutable `systemPublicKeyHex`). Applications
-   * built on `BaseApplication` always hold an `Environment` instance here.
-   */
-  private get environment(): Environment<TID> {
-    return this.application.environment as Environment<TID>;
+  /** The application's environment, as the `IEnvironment` interface. */
+  private get environment(): IEnvironment<TID> {
+    return this.application.environment;
   }
   /**
    * Get the lazily-initialized system user for key wrapping/unwrapping.
@@ -503,7 +497,8 @@ export class BackupCodeService<
       },
       session,
       {
-        timeoutMs: (this.environment.mongo.transactionTimeout as number) * 5,
+        timeoutMs:
+          (this.environment.mongo?.['transactionTimeout'] as number) * 5,
       },
     );
   }
