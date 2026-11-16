@@ -9,6 +9,7 @@ import { sign } from 'jsonwebtoken';
 import { UserDocument } from '../documents/user';
 import {
   IApplication,
+  IJwtServiceApplication,
   IJwtSignResponse,
   AbstractJwtService,
 } from '@digitaldefiance/node-express-suite';
@@ -24,7 +25,7 @@ export class JwtService<
   TDate extends Date = Date,
   TTokenRole extends ITokenRole<TID, TDate> = ITokenRole<TID, TDate>,
   TTokenUser extends ITokenUser = ITokenUser,
-  TApplication extends IApplication<TID> = IApplication<TID>,
+  TApplication extends IJwtServiceApplication = IApplication<TID>,
 > extends AbstractJwtService<TID, TTokenUser, TApplication> {
   private readonly roleService: RoleService<TID, TDate, TTokenRole>;
 

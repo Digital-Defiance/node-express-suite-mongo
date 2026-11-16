@@ -1612,12 +1612,10 @@ SYSTEM_PASSWORD="${serverInitResult.systemPassword}"
       symmetricKeyMode: ECIES.SYMMETRIC.MODE,
     };
     const eciesService = new ECIESService<TID>(config);
-    const roleService = new RoleService<TID>(
-      application as unknown as import('@digitaldefiance/node-express-suite').IApplication<TID>,
-    );
+    const roleService = new RoleService<TID>(application);
     const keyWrappingService = new KeyWrappingService();
     const backupCodeService = new BackupCodeService<TID>(
-      application as unknown as import('@digitaldefiance/node-express-suite').IApplication<TID>,
+      application,
       eciesService,
       keyWrappingService,
       roleService,

@@ -17,13 +17,13 @@ import {
   DEFAULT_TRANSACTION_TIMEOUT,
   getDefaultBaseDelay,
 } from '@digitaldefiance/node-express-suite';
-import type { IApplication } from '@digitaldefiance/node-express-suite';
+import type { IConstantsPort } from '@digitaldefiance/node-express-suite';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import type { MongoTransactionCallback } from '../types';
 
 /** Transaction configuration options for Mongoose transactions */
-export interface MongoTransactionOptions<TID extends PlatformID = Buffer> {
-  application?: IApplication<TID>;
+export interface MongoTransactionOptions<_TID extends PlatformID = Buffer> {
+  application?: IConstantsPort;
   timeoutMs?: number;
   retryAttempts?: number;
   baseDelay?: number;

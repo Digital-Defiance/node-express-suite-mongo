@@ -10,7 +10,7 @@ import {
   getSuiteCoreI18nEngine,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
-import { IApplication } from '@digitaldefiance/node-express-suite';
+import type { IConstantsPort } from '@digitaldefiance/node-express-suite';
 
 /**
  * Error thrown when Mongoose validation fails.
@@ -33,7 +33,7 @@ export class MongooseValidationError extends HandleableError {
       [path: string]: Error.CastError | Error.ValidatorError;
     },
     language?: CoreLanguageCode,
-    application?: IApplication,
+    application?: IConstantsPort,
   ) {
     const coreEngine = getSuiteCoreI18nEngine(
       application ? { constants: application.constants } : undefined,

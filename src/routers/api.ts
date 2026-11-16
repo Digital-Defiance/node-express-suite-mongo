@@ -148,9 +148,7 @@ export class ApiRouter<
       this.roleService,
       this.eciesService,
     );
-    this.openApiController = new OpenApiController(
-      application as unknown as import('@digitaldefiance/node-express-suite').IApplication<TID>,
-    );
+    this.openApiController = new OpenApiController(application);
     this.router.use('/user', this.userController.router);
     if (docsRoute !== undefined && docsRoute !== '') {
       this.router.use(docsRoute, this.openApiController.router);
@@ -170,10 +168,7 @@ export class ApiRouter<
     if (!app.services.has(ServiceKeys.ROLE)) {
       app.services.register(
         ServiceKeys.ROLE,
-        () =>
-          new RoleService<TID, TDate, TTokenRole>(
-            app as unknown as import('@digitaldefiance/node-express-suite').IApplication<TID>,
-          ),
+        () => new RoleService<TID, TDate, TTokenRole>(app),
       );
     }
     if (!app.services.has(ServiceKeys.KEY_WRAPPING)) {

@@ -77,10 +77,7 @@ export class MongoAuthenticationProvider<
           return null;
         }
 
-        const roleService = new RoleService<TID>(
-          this
-            .application as unknown as import('@digitaldefiance/node-express-suite').IApplication<TID>,
-        );
+        const roleService = new RoleService<TID>(this.application);
         const roles = await roleService.getUserRoles(userDoc._id as TID, sess);
         const tokenRoles = roleService.rolesToTokenRoles(roles);
         return RequestUserService.makeRequestUserDTO(

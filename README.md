@@ -148,6 +148,17 @@ If upgrading from `@digitaldefiance/node-express-suite` < 4.23.0 (before the spl
 4. Symbols that move here: documents, schemas, models, `MongoDatabasePlugin`, `DatabaseInitializationService`, `UserService`, `RoleService`, `BackupCodeService`, `UserController`, `ModelRegistry`, `TransactionManager`, `ApiRouter`, all Mongoose-specific interfaces/types/errors
 
 ## ChangeLog
+### Version 6.0.0
+**Breaking (type level only; runtime behaviour is unchanged).** Adopts the application ports introduced in `@digitaldefiance/node-express-suite` 6.0.0, so these signatures take only what they read instead of the whole `IApplication`. Passing a real application, or an `IMongoApplication`, still compiles. Migration guide for the base package: `docs/application-interfaces.md` in `@digitaldefiance/node-express-suite`.
+- Breaking: peer dependency `@digitaldefiance/node-express-suite` is now `^6.0.0`
+- Changed: `RoleService` constructor takes `IDatabasePort` (was `IApplication<TID>`)
+- Changed: `JwtService`'s `TApplication` constraint is `IJwtServiceApplication` (was `IApplication<TID>`); default unchanged
+- Changed: `MongoBaseController`'s `TApplication` constraint is `IControllerApplication<TID>` (was `IApplication<TID>`); default unchanged
+- Changed: `MongoTransactionOptions.application` is `IConstantsPort` (was `IApplication<TID>`), and `MongooseValidationError`'s optional `application` parameter is `IConstantsPort`. `MongoTransactionOptions` keeps its now-unused type parameter (renamed `_TID`), so explicit type arguments still compile
+- Changed: `BackupCodeService` reads the environment through the `Environment` class (`IApplication.environment` is now the `IEnvironment` interface). Cast is internal; the constraint on `TApplication` is unchanged
+- Removed internal `as unknown as IApplication` casts around `RoleService`, `BackupCodeService` and `OpenApiController` construction; they are no longer needed
+- Unchanged on purpose: `MongoDatabasePlugin.init(app: IApplication<TID>)` keeps the full application because its `IMongoApplication` adapter forwards `ready` and `start`; `PluginManager` passes the full application at runtime. `IMongoApplication`, `IDocumentStore.initializeDevStore` and `ApplicationBuilder.withApiRouter` also keep `IApplication`
+- Migration: code that reads `Environment`-only members (`get`, `has`, `getObject`, `requireMongo`) through `app.environment` must type the value as `Environment` or narrow with `instanceof`; `app.services.clear()` becomes `app.services.clear?.()`. See the base package guide for the full list
 ### Version 5.1.0
 - Fixed: `MongoBaseController`'s IDatabase fallback passes the adapter's session to the callback; Mongo services unwrap it to the native session mongoose needs, so writes join the transaction
 - Fixed: `UserController` handlers read `validatedBody` before entering a transaction

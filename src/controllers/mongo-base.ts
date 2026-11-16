@@ -19,7 +19,10 @@ import {
   type ApiResponse,
   type TransactionCallback,
 } from '@digitaldefiance/node-express-suite';
-import type { IApplication } from '@digitaldefiance/node-express-suite';
+import type {
+  IApplication,
+  IControllerApplication,
+} from '@digitaldefiance/node-express-suite';
 import type { IMongoApplication } from '../interfaces/mongo-application';
 import type { UserDocument } from '../documents/user';
 import { BaseModelName } from '../enumerations/base-model-name';
@@ -46,7 +49,7 @@ export abstract class MongoBaseController<
   THandler extends object,
   TLanguage extends string,
   TID extends PlatformID = Buffer,
-  TApplication extends IApplication<TID> = IApplication<TID>,
+  TApplication extends IControllerApplication<TID> = IApplication<TID>,
 > extends BaseController<T, THandler, TLanguage, TID, TApplication> {
   protected transactionManager: TransactionManager | undefined;
 

@@ -22,7 +22,7 @@ import {
 import { RoleDocument } from '../documents/role';
 import { UserRoleDocument } from '../documents/user-role';
 import { BaseModelName } from '../enumerations/base-model-name';
-import type { IApplication } from '@digitaldefiance/node-express-suite';
+import type { IDatabasePort } from '@digitaldefiance/node-express-suite';
 import type { IRoleBackendObject } from '@digitaldefiance/node-express-suite';
 import { ModelRegistry } from '../model-registry';
 import { omit, AbstractRoleService } from '@digitaldefiance/node-express-suite';
@@ -43,12 +43,18 @@ export class RoleService<
   TID extends PlatformID = Buffer,
   TDate extends Date = Date,
   TTokenRole extends ITokenRole<TID, TDate> = ITokenRole<TID, TDate>,
-> extends AbstractRoleService<TID, TDate, TTokenRole, RoleDocument<TID>> {
+> extends AbstractRoleService<
+  TID,
+  TDate,
+  TTokenRole,
+  RoleDocument<TID>,
+  IDatabasePort
+> {
   /**
    * Constructor for the role service
    * @param application The application object
    */
-  constructor(application: IApplication<TID>) {
+  constructor(application: IDatabasePort) {
     super(application);
   }
 
