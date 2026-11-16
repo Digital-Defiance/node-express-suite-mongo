@@ -5,7 +5,10 @@ import {
 } from '@digitaldefiance/suite-core-lib';
 import { Buffer } from 'buffer';
 import { hkdfSync, randomBytes } from 'crypto';
-import { BackupCode } from '@digitaldefiance/node-express-suite';
+import {
+  BackupCode,
+  DEFAULT_TRANSACTION_TIMEOUT,
+} from '@digitaldefiance/node-express-suite';
 import { LocalhostConstants as AppConstants } from '@digitaldefiance/node-express-suite';
 import { InvalidBackupCodeVersionError } from '@digitaldefiance/node-express-suite';
 
@@ -490,6 +493,32 @@ describe('BackupCode', () => {
         expect(result.user).toBeDefined();
         expect(result.codeCount).toBe(0);
         expect(userDoc.save).toHaveBeenCalled();
+      });
+    });
+
+    describe('transaction timeout', () => {
+      const run = async (environment: any) => {
+        const { BackupCodeService } = require('../../src/services/backup-code');
+        const svc = new BackupCodeService(
+          { ...mockApp, environment },
+          mockEciesService,
+          mockKeyWrappingService,
+          mockRoleService,
+        );
+        const spy = jest
+          .spyOn(svc, 'withTransaction')
+          .mockResolvedValue({ userDoc: {}, user: {}, codeCount: 0 });
+        await svc['_recoverViaUserDoc']({ backupCodes: [] }, 'f'.repeat(32));
+        return spy.mock.calls[0][2] as { timeoutMs: number };
+      };
+      it('scales the configured transactionTimeout by 5', async () => {
+        const opts = await run({ mongo: { transactionTimeout: 5000 } });
+        expect(opts.timeoutMs).toBe(25000);
+      });
+      it('falls back to the default timeout when environment.mongo is absent', async () => {
+        const opts = await run({});
+        expect(opts.timeoutMs).toBe(DEFAULT_TRANSACTION_TIMEOUT * 5);
+        expect(Number.isNaN(opts.timeoutMs)).toBe(false);
       });
     });
 

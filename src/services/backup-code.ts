@@ -31,6 +31,7 @@ import {
   BackupCode,
   LocalhostConstants as AppConstants,
   BaseService,
+  DEFAULT_TRANSACTION_TIMEOUT,
   type TransactionCallback,
   KeyWrappingService,
   SymmetricService,
@@ -498,7 +499,9 @@ export class BackupCodeService<
       session,
       {
         timeoutMs:
-          (this.environment.mongo?.['transactionTimeout'] as number) * 5,
+          ((this.environment.mongo?.['transactionTimeout'] as
+            | number
+            | undefined) ?? DEFAULT_TRANSACTION_TIMEOUT) * 5,
       },
     );
   }
