@@ -497,7 +497,9 @@ describe('BackupCode', () => {
     });
 
     describe('transaction timeout', () => {
-      const run = async (environment: any) => {
+      const run = async (environment: {
+        mongo?: { transactionTimeout?: number };
+      }) => {
         const { BackupCodeService } = require('../../src/services/backup-code');
         const svc = new BackupCodeService(
           { ...mockApp, environment },
